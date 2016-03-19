@@ -26,6 +26,7 @@ db.once('open', function() {
 	var Kitten = mongoose.model('Kitten', kittySchema);
 	var silence = new Kitten({ name: 'Silence' });
 	console.log(silence.name); // 'Silence'
+	silence.save();
 	
 	var fluffy = new Kitten({ name: 'fluffy' });
 	fluffy.save(function (err, fluffy) {
