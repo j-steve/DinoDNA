@@ -9,47 +9,48 @@ mongoose.connect('mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-/* Create Genome schema */
-var Genome;
+/* Create SNP schema */ 
+var SNP;
 db.once('open', function() {
-	var genomeSchema = mongoose.Schema({
-		name: String,
-		snp: [{
-			rsid: String,
-			chromosome: String,
-			position: Number,
-			allele1: String,
-			allele2: String
-		}],
+	var snpSchema = mongoose.Schema({ 
+		rsid: String,
+		chromosome: String,
+		position: Number,
+		allele1: String,
+		allele2: String 
 	});
-	Genome = mongoose.model('Genome', genomeSchema)
-});
+	SNP = mongoose.model('SNP', snpSchema)
+})
 
 /* File Upload POST */
 router.post('/', function(req, res, next) {
 	try {
 		processFile(req, res);
-		res.send("OK");
 	} catch (e) {
-		console.error(e);
-		return res.status(500).send("A Dino-rific error has occured.");
+		console.err(e);
+		res.status(500).send("An error occured.");
 	} 
 
 	function processFile(req, res) { 
 		req.pipe(req.busboy);
 		req.busboy.on('file', function (fieldname, file, filename) {
 			console.log("Uploading: " + filename);
-			var genome = new Genome({name: filename, snp: []});
-			genome.save();
 
 			var lineReader = readline.createInterface({input: file});
+			var lineNo = 0;
 			lineReader.on('line', function(line) {
-				if (line.startsWith('#') || line.startsWith('rsid')) {return;} // skip comments and header
-				console.log('line:', line);
-				
-				var lp = line.split('\t');
-				var snp = {rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele1: lp[4]};
-				genome.update({$push: {snp: snp}}).exec();
+				lineNo++;
+				if (lineNo === 1 && line !== '#AncestryDNA raw data download') {
+					res.status(500).send('Invalid file: must be AncestryDNA file export.');
+				} else if (lineNo > 17) { // skip comments and header
+					var lp = line.split('\t');
+					var snp = new SNP({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele1: lp[4]});
+					snp.save();
+				}
+			});
+			
+			lineReader.on('close', function() {
+				if (!res.finished) {res.send('OK');}
 			});
 
 		});
