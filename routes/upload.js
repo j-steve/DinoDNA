@@ -44,7 +44,7 @@ router.post('/', function(req, res, next) {
 					res.status(500).send('Invalid file: must be AncestryDNA file export.');
 				} else if (lineNo > 17) { // skip comments and header
 					var lp = line.split('\t');
-					var snp = new SNP({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele1: lp[4]});
+					var snp = new SNP({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
 					snp.save();
 				}
 			});
