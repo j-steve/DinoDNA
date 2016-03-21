@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<% include partials/head %>
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css">
+	</head>
+	<body>
+		<h1><%- title %></h1>
+		<p>Welcomeee to <%- title %></p>
+
+		<form action="/file-upload" class="dropzone" enctype="multipart/form-data" method="post"></form>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js"></script>
+	</body>
+</html>
