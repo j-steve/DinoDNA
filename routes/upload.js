@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var readline = require('readline');
+var wait = require('wait.for');
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.mlab.com:47335/heroku_tfldttfx');
@@ -9,9 +10,10 @@ mongoose.connect('mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 
-/* Create SNP schema */ 
+/* Create SNP schema */
 var SNP;
-db.once('open', function() {
+var dbconn = db.once('open', function() {
+	console.log("Database connection established");
 	var snpSchema = mongoose.Schema({ 
 		rsid: String,
 		chromosome: String,
@@ -20,35 +22,53 @@ db.once('open', function() {
 		allele2: String 
 	});
 	SNP = mongoose.model('SNP', snpSchema)
-})
+}); 
 
 /* File Upload POST */
 router.post('/', function(req, res, next) {
 	try {
+		//db.on('open', function() {processFile(req, res);});
 		processFile(req, res);
 	} catch (e) {
-		console.err(e);
-		res.status(500).send("An error occured.");
+		console.error(e);
+		res.status(500).end("An error occured.");
 	} 
 
-	function processFile(req, res) { 
+	function processFile(req, res) {
 		req.pipe(req.busboy);
 		req.busboy.on('file', function (fieldname, file, filename) {
 			console.log("Uploading: " + filename);
-
+			
 			var lineReader = readline.createInterface({input: file});
+			
+			var snps = [];
+			
+			file.on('data', function(data) {
+				var insertCount = snps.length;
+				console.log('Next chunk recieved:', data.length, 'bytes of data; attempting to upload', insertCount, 'new records.');
+				if (!insertCount) {return;} // Continue stream if no items await insert
+				SNP.collection.insert(snps, function(err, docs) {
+					if (err) {
+						console.error(err);
+						res.status(500).end("An error occured: DB insert failed.");
+					} else {
+						console.log('Inserted', insertCount, 'records succesfully');
+					}
+				});
+				snps = [];
+			});
+			
 			var lineNo = 0;
 			lineReader.on('line', function(line) {
 				if (lineNo === -1) {return;}
 				lineNo++;
-				console.log('Reading line #' + lineNo);
+				//console.log('Reading line #' + lineNo);
 				if (lineNo === 1 && line !== '#AncestryDNA raw data download') {
 					res.status(500).end('Invalid file: must be AncestryDNA file export.');
 					lineNo = -1;
-				} else if (lineNo > 17) { // skip comments and header
-					var lp = line.split('\t');
-					var snp = new SNP({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
-					snp.save();
+				} else if (lineNo > 17) { // skip comments and header 
+					var lp = line.split('\t'); 
+					snps.push({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
 				}
 			});
 			
