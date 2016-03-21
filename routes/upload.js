@@ -39,9 +39,12 @@ router.post('/', function(req, res, next) {
 			var lineReader = readline.createInterface({input: file});
 			var lineNo = 0;
 			lineReader.on('line', function(line) {
+				if (lineNo === -1) {return;}
 				lineNo++;
+				console.log('Reading line #' + lineNo);
 				if (lineNo === 1 && line !== '#AncestryDNA raw data download') {
-					res.status(500).send('Invalid file: must be AncestryDNA file export.');
+					res.status(500).end('Invalid file: must be AncestryDNA file export.');
+					lineNo = -1;
 				} else if (lineNo > 17) { // skip comments and header
 					var lp = line.split('\t');
 					var snp = new SNP({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
@@ -50,7 +53,7 @@ router.post('/', function(req, res, next) {
 			});
 			
 			lineReader.on('close', function() {
-				if (!res.finished) {res.send('OK');}
+				if (!res.finished) {res.send('OK');} else {console.log('not ok');}
 			});
 
 		});
