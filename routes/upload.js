@@ -44,19 +44,18 @@ router.post('/', function(req, res, next) {
 			var snps = [];
 			
 			file.on('data', function(data) {
-				console.log('Next chunk recieved:', data.length, 'bytes of data; attempting to upload', snps.length, 'new records.');
-				if (!snps.length) {return;} // Continue stream if no items await insert
-				file.pause();
+				var insertCount = snps.length;
+				console.log('Next chunk recieved:', data.length, 'bytes of data; attempting to upload', insertCount, 'new records.');
+				if (!insertCount) {return;} // Continue stream if no items await insert
 				SNP.collection.insert(snps, function(err, docs) {
 					if (err) {
 						console.error(err);
 						res.status(500).end("An error occured: DB insert failed.");
 					} else {
-						console.log('Inserted', snps.length, 'records succesfully');
-						snps = [];
-						file.resume();
+						console.log('Inserted', insertCount, 'records succesfully');
 					}
 				});
+				snps = [];
 			});
 			
 			var lineNo = 0;
