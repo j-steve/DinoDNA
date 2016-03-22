@@ -6,10 +6,10 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css">
 	</head>
 	<body>
-		<h1><%- title %></h1>
-		<p>Welcomeee to <%- title %></p>
 
-		<form action="/file-upload" class="dropzone" enctype="multipart/form-data" method="post"></form>
+		<div id="main"><%- locals.reactOutput ? locals.reactOutput : '' %></div>
+
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js"></script>
+		<script src="/js/bundle.js"></script>
 	</body>
 </html>

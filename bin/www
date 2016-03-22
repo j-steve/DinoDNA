@@ -4,6 +4,7 @@
  * Module dependencies.
  */
 
+require('babel-register'); // enable server-side ES6
 var app = require('../app');
 var debug = require('debug')('DinoDNA:server');
 var http = require('http');

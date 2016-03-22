@@ -4,7 +4,10 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var busboy = require('connect-busboy'); 
+var busboy = require('connect-busboy');
+var lessMiddleware = require('less-middleware');
+
+var PUBLIC_DIR = path.join(__dirname, 'public');
 
 var app = express();
 
@@ -13,14 +16,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // uncomment after placing your favicon in /public
-app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(favicon(PUBLIC_DIR + '/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(busboy()); 
 app.use(cookieParser());
-app.use(require('less-middleware')(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(lessMiddleware(path.join(__dirname, 'src', 'less'), {dest: PUBLIC_DIR}));
+app.use(express.static(PUBLIC_DIR));
 
 app.use('/', require('./routes/index'));
 app.use('/users', require('./routes/users'));
