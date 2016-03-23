@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var Readline = require('readline');
-var Promise = require('bluebird'); 
+var Promise = require('bluebird');
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.mlab.com:47335/heroku_tfldttfx');
@@ -95,4 +95,3 @@ router.post('/', function(req, res, next) {
 });
 
 module.exports = router;
-
