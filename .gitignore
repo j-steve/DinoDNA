@@ -1,3 +1,4 @@
 /.project
 /node_modules/**
 /nbproject/**
+/public/stylesheets/**.css
