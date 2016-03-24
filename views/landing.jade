@@ -1,0 +1,28 @@
+extends layout
+
+block style
+	link(rel='stylesheet', href='/stylesheets/landing.css')
+
+block content
+	header.top-border
+		span
+			|already registered?
+			a(href="login")="log in here"
+
+	div.container
+		div.left
+			h1.title="DinoDNA"
+			h2.subtitle
+				|Discover the secrets
+				br
+				|hidden in your DNA!
+		div.right
+			a.circle(href="upload")
+				h2 
+					|get started! 
+					span(class="arrow")
+					
+	footer.legal
+		&copy;
+		|2016 SichLumpSich Industrial Concerns & Heavy Manufacturing Ltd. All Rights Reserved. | 
+		a(href="mailto:steve5805@gmail.com")="Contact Us"

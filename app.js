@@ -5,6 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var busboy = require('connect-busboy'); 
+var lessMiddleware = require('less-middleware');
 
 var app = express();
 
@@ -19,12 +20,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(busboy()); 
 app.use(cookieParser());
-app.use(require('less-middleware')(path.join(__dirname, 'public')));
+app.use(lessMiddleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', require('./routes/index'));
-app.use('/users', require('./routes/users'));
-app.use('/file-upload', require('./routes/upload'));
+app.use('/', require('./routes/landing'));
+app.use('/upload', require('./routes/upload')); 
+app.use('/process-upload', require('./routes/process-upload'));
+app.use('/login', require('./routes/login'));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -56,8 +58,6 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
-
-
 
 
 module.exports = app;
