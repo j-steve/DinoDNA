@@ -50,7 +50,7 @@ router.post('/', function(req, res, next) {
 				lineNo = -1;
 			} else if (lineNo > 17) { // skip comments and header 
 				var lp = line.split('\t'); 
-				snps.push({rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
+				snps.push({userID: req.cookies.userid, rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
 			}
 		});
 		

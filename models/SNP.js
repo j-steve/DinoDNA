@@ -1,6 +1,8 @@
-var mongoose = require('mongoose'); 
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
-var schema = mongoose.Schema({ 
+var schema = new Schema({
+	userID: String,
 	rsid: String,
 	chromosome: String,
 	position: Number,
