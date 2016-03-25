@@ -1,10 +1,21 @@
 var express = require('express');
 var router = express.Router();
-////"dropzone": "~4.3.0"
+var mongoose = require('mongoose');
+var User = require('../models/User');
+ 
+// Create SNP schema
+
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('upload', { title: 'DinoDNA' });
+	User.findById(req.cookies.userid, function(err, user) { 
+		if (user) { 
+			res.render('upload', {user:user.username});
+		} else {
+			res.redirect('/start');
+		}
+	});
   
 });
 

@@ -2,26 +2,9 @@ var express = require('express');
 var router = express.Router();
 
 var Readline = require('readline');
-var Promise = require('bluebird'); 
+var Promise = require('bluebird');
+var SNP = require('../models/SNP');
 
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.mlab.com:47335/heroku_tfldttfx');
-var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
- 
-// Create SNP schema
-var SNP;
-var dbconn = db.once('open', function() {
-	console.log("Database connection established");
-	var snpSchema = mongoose.Schema({ 
-		rsid: String,
-		chromosome: String,
-		position: Number,
-		allele1: String,
-		allele2: String 
-	});
-	SNP = mongoose.model('SNP', snpSchema)
-});
 
 /* File Upload POST */
 router.post('/', function(req, res, next) {

@@ -1,0 +1,14 @@
+extends layout
+
+block content
+	h1="Create Account"
+	div(style="margin-bottom:15px;")
+		|It's easy!
+		br
+		|Like stupidly easy!
+		br
+	form(method="POST")
+		label
+			span="Username: "
+			input(name="username")
+		input(type="submit" value="go!")
