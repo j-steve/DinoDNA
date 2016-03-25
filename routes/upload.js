@@ -11,7 +11,7 @@ var User = require('../models/User');
 router.get('/', function(req, res, next) {
 	User.findById(req.cookies.userid, function(err, user) { 
 		if (user) { 
-			res.render('upload', {user:user.username});
+			res.render('upload', {user:user.email});
 		} else {
 			res.redirect('/start');
 		}

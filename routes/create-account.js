@@ -20,11 +20,11 @@ router.get('/', function(req, res, next) {
 
 
 router.post('/', function(req, res, next) {
-	var userInfo = {username: req.body.username};
+	var userInfo = {email: req.body.email};
 	User.findOne(userInfo, function(err, user) {
 		if (user) {
-			console.log("Duplicate user: " + user.username);
-			res.status(500).end("Selected username already exists");
+			console.log("Duplicate user: " + user.email);
+			res.status(500).end("Selected email already exists");
 		} else {
 			user = new User(userInfo)
 			user.save(); 
