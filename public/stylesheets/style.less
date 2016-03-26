@@ -1,3 +1,8 @@
+a {
+	cursor:pointer;
+	text-decoration:none;
+}
+
 body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
@@ -6,3 +11,24 @@ body {
 a {
   color: #00B7FF;
 }
+ 
+ .top-border {
+ 	list-style-type: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    margin: 0px;
+    display: block;
+    padding: 15px 100px;
+    background: rgba(0, 0, 0, 0.48);
+    
+    & > * {
+    	float:right;
+	}
+	
+    a {
+    	font-weight:bold;
+		margin-left:10px;
+    }
+ }

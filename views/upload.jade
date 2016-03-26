@@ -1,12 +1,10 @@
-extends layout
-
-
+extends user-layout
 
 block content
 	h1="DinoDNA"
 	p 
 		|Welcome 
-		b #{user}!  
+		b #{user.email}!  
 		|Upload your DNA file(s) below:
 	
 	script(src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js")

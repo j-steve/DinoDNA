@@ -1,0 +1,12 @@
+extends layout
+append style
+	link(rel='stylesheet', href='/stylesheets/user-layout.css')
+	
+block header
+	header.top-border
+		div
+			span.logged-in
+				|logged in as 
+				span.username=user.email
+			span.logout
+				a(href="logout")="sign out"
