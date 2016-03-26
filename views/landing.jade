@@ -1,28 +1,23 @@
 extends layout
 
-block style
+append style
 	link(rel='stylesheet', href='/stylesheets/landing.css')
-
-block content
+	
+append content
 	header.top-border
-		div
-			|already registered?
-			a(href="login")="log in here"
+		div already registered?
+			a(href="login") log in here
 
 	div.container
 		div.left
-			h1.title="DinoDNA"
-			h2.subtitle
-				|Discover the secrets
-				br
-				|hidden in your genes!
+			h1.title DinoDNA
+			h2.subtitle Discover the secrets <br> hidden in your genes!
 		div.right
 			a.circle(href="start")
-				h2 
-					|get started! 
+				h2 get started! 
 					span(class="arrow")
 					
-	footer.legal
-		|&copy;
-		|2016 SichLumpSich Industrial Concerns & Heavy Manufacturing Ltd. All Rights Reserved. | 
-		a(href="mailto:steve5805@gmail.com")="Contact Us"
+	footer.legal 
+		|&copy; 2016 SichLumpSich Industrial Concerns & Heavy Manufacturing Ltd. All Rights Reserved. |
+		a(href="mailto:steve5805@gmail.com") Contact Us
+		

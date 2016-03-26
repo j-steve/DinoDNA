@@ -1,12 +1,15 @@
 extends user-layout
 
-block content
-	h1="DinoDNA"
+append style
+	link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css")
+
+append script
+	script(src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js")
+	
+append content
+	h DinoDNA
 	p 
 		|Welcome 
 		b #{user.email}!  
 		|Upload your DNA file(s) below:
-	
-	script(src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js")
-	link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css")
 	form(action="/process-upload", class="dropzone" method="post", enctype="multipart/form-data")

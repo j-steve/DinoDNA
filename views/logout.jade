@@ -1,9 +1,14 @@
-p="You have successfully logged out."
-p
-	|Redirecting in 
-	span#countdown="3"
-	|...
-script(type='text/javascript').
-	var countdown = document.getElementById('countdown');
-	setInterval(function() {countdown.innerHTML = countdown.innerHTML - 1;}, 1000);
-	setTimeout(function() {window.location.replace('/');}, 2500);
+extends layout
+
+append script 
+	script(type='text/javascript').
+		var countdown = document.getElementById('countdown');
+		setInterval(function() {countdown.innerHTML = countdown.innerHTML - 1;}, 1000);
+		setTimeout(function() {window.location.replace('/');}, 2500);
+
+append content
+	p You have successfully logged out.
+	p
+		|Redirecting in 
+		span#countdown="3"
+		|...

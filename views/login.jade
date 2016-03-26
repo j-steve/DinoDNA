@@ -1,22 +1,22 @@
 extends layout
 
-block style
+append style
 	link(rel='stylesheet', href='/stylesheets/login.css')
 
-block content
-	h1="Login or Register"
-	h2.subtitle="Either way we just need your email and password!"
+append script 
+	script(type='text/javascript' src='/js/login.js')
+	
+append content
+	h1 Login or Register
+	h2.subtitle Either way we just need your email and password!
 	form#login(method="POST" onsubmit="tryLogin(this); return false;")
 		fieldset
 			label
-				span="email"
-				input(name="email", autofocus="on") 
+				span email
+				input(name="email", autofocus, autocomplete) 
 			label
-				span="password"
+				span password
 				input(name="password", type="password", autocomplete="off")
 				div
 					input#go(type="submit" value="go!") 
 		div.errMsg 
-
-block script 
-	script(type='text/javascript' src='/js/login.js')
