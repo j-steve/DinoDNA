@@ -9,14 +9,7 @@ var User = require(ROOT_PATH + '/models/User');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-	User.findById(req.cookies.userid, function(err, user) { 
-		if (user) { 
-			res.render('upload', {user:user.email});
-		} else {
-			res.redirect('/start');
-		}
-	});
-  
+	res.render('upload');
 });
 
 module.exports = router;

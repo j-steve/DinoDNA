@@ -1,0 +1,45 @@
+.subtitle {
+	font-weight:normal;
+	font-size:16px;
+}
+
+.display-table() {
+	display: inline-table;
+	& > * {
+		display: table-row;
+		& > * {
+			display:table-cell;
+		}		 
+	}
+}
+form {
+	margin:15px 25px;
+	font-size:12px;
+
+	fieldset {
+		.display-table;
+		
+		padding: 0px;
+		border-style:none;
+		border-collapse: separate;
+		border-spacing: 5px 5px;
+		
+		label { 
+			
+			span {
+				text-align:right;
+				&::after {content:':';}
+			} 
+		}
+		
+	}
+		
+	input[type=submit] { 
+	} 
+		
+	.errMsg {
+		margin-left:15px;
+		font-weight:bold;
+		color:red;
+	}
+}
