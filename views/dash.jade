@@ -1,7 +1,6 @@
 extends user-layout
 
-block content
-	h1 "Dashboard"
-	p
-		currently logged in as #{user.email}
+append content
+	h1 Dashboard
+	p Welcome back #{user.email}!
 	

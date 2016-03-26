@@ -1,12 +1,12 @@
 extends layout
+
 append style
 	link(rel='stylesheet', href='/stylesheets/user-layout.css')
 	
-block header
+append header
 	header.top-border
 		div
 			span.logged-in
-				|logged in as 
-				span.username=user.email
+				|logged in as #[span.username=user.email]
 			span.logout
-				a(href="logout")="sign out"
+				a(href="logout") sign out
