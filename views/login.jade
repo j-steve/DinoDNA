@@ -1,15 +1,21 @@
 extends layout
 
+block style
+	link(rel='stylesheet', href='/stylesheets/login.css')
+
 block content
 	h1="Login or Register"
 	div(style="margin-bottom:15px;")
 		|Either way we just need your email and password!
-	form(method="POST")
+	form#login(method="POST" onsubmit="tryLogin(this); return false;")
 		label
 			span="email: "
 			input(name="email")
 		label
 			span="password: "
-			input(name="password", type="password")
-		input(type="submit" value="go!")
-	span(style="margin-top:15px; color:red; font-weight:bold;")=errMsg
+			input(name="password", type="password", autocomplete="off")
+		input#go(type="submit" value="go!")
+		span.errMsg(style="margin-top:15px; color:red; font-weight:bold;")
+
+block script 
+	script(type='text/javascript' src='/js/login.js')

@@ -23,23 +23,29 @@ router.route('/')
 	 */
 	.post(function(req, res, next) {
 		console.log('Searching for user with email=' + req.body.email);
-		var userInfo = {email: req.body.email.toLowerCase()}; 
-		User.findOne(userInfo, function(err, user) {
-			if (err) {return next(err);}
-			if (user && !user.validatePassword(req.body.password)) {
-				console.warn('Invalid password.');
-				res.status(500).send('That email address has already been registered, but the password does not match. Please try again.');
-			} else { 
-				console.log('Authenticated user: ' + user);
-				if (!user) {
-					console.log('Registering new user.');
-					user = new User(userInfo);
-					user.setPassword(req.body.password).save(); 
+		if	(req.body.email.length < 5) {
+			res.status(500).send('Invalid email address, must be a least 5 characters.');
+		} else if (req.body.password.length < 5) { 
+			res.status(500).send('Invalid password, must be a least 5 characters.');
+		} else { 
+			var userInfo = {email: req.body.email.toLowerCase()}; 
+			User.findOne(userInfo, function(err, user) {
+				if (err) {return next(err);}
+				if (user && !user.validatePassword(req.body.password)) {
+					console.warn('Invalid password.');
+					res.status(500).send('That email address has already been registered, but the password does not match. Please try again.');
+				} else { 
+					console.log('Authenticated user: ' + user);
+					if (!user) {
+						console.log('Registering new user.');
+						user = new User(userInfo);
+						user.setPassword(req.body.password).save(); 
+					}
+					res.cookie('userid', user._id, {maxAge: 365 * MILIS_PER_DAY, httpOnly: true});
+					res.send(req.query.r || '/dash');
 				}
-				res.cookie('userid', user._id, {maxAge: 365 * MILIS_PER_DAY, httpOnly: true});
-				res.redirect(req.query.r || '/dash');
-			}
-		});
+			});
+		}
 	});
 
 

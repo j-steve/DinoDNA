@@ -1,9 +1,9 @@
 p="You have successfully logged out."
 p
 	|Redirecting in 
-	span#countdown="5"
+	span#countdown="3"
 	|...
 script(type='text/javascript').
 	var countdown = document.getElementById('countdown');
 	setInterval(function() {countdown.innerHTML = countdown.innerHTML - 1;}, 1000);
-	setTimeout(function() {window.location.replace('/');}, 4500);
+	setTimeout(function() {window.location.replace('/');}, 2500);
