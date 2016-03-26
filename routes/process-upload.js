@@ -3,7 +3,7 @@ var router = express.Router();
 
 var Readline = require('readline');
 var Promise = require('bluebird');
-var SNP = require('../models/SNP');
+var SNP = require(ROOT_PATH + '/models/SNP');
 
 
 /* File Upload POST */
@@ -55,11 +55,11 @@ router.post('/', function(req, res, next) {
 		});
 		
 		lineReader.on('close', function() {
-			if (!res.finished) {res.send('OK');}
+			if (!res.finished) {res.sendStatus(200);}
 
 			Promise.all(inserts).then(function() {
 				console.log('All uploads complete.');
-			}).catch(console.error);
+			})['catch'](console.error);
 		}); 
 	}
 	

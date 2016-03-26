@@ -1,0 +1,15 @@
+extends layout
+
+block content
+	h1="Login or Register"
+	div(style="margin-bottom:15px;")
+		|Either way we just need your email and password!
+	form(method="POST")
+		label
+			span="email: "
+			input(name="email")
+		label
+			span="password: "
+			input(name="password", type="password")
+		input(type="submit" value="go!")
+	span(style="margin-top:15px; color:red; font-weight:bold;")=errMsg
