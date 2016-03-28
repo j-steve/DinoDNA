@@ -1,0 +1,24 @@
+extends user-layout
+
+append style
+	link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.css")
+
+append script
+	script(src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/4.3.0/min/dropzone.min.js")
+	script.
+		Dropzone.options.upload = {
+			url: location.href,
+			init: function () {
+				this.on("queuecomplete", function(file) {
+					var hasSuccess = this.files.find(function(x) {return x.status === 'success';});
+					var doneBtn = document.getElementById('done');
+					doneBtn.disabled = !hasSuccess;
+					doneBtn.focus();
+				});
+			}
+		};
+	
+append content
+	p Upload #[b=dnaProfile.name]'s DNA file(s) below:
+	form(method="post", enctype="multipart/form-data").dropzone#upload
+	button#done(disabled, onclick="location.href='/dash'") Done!

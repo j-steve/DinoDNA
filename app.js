@@ -37,11 +37,12 @@ app.use('/login', require('./routes/login'));
 app.use('/logout', require('./routes/logout'));
 
 // Setup routing for authenticated pages.
-app.use(require('./utils/auth')); 
-app.use('/dash', require('./routes/dash'));
-app.use('/start', require('./routes/upload'));
-app.use('/upload', require('./routes/upload')); 
-app.use('/process-upload', require('./routes/process-upload'));
+app.use(require('./utils/auth'));
+app.use('/start', require('./routes/start'));
+app.use('/add-dna-profile', require('./routes/add-dna-profile'));
+app.use('/dash', require('./routes/dashboard'));
+app.use('/dna-upload', require('./routes/dna-upload'));
+app.use('/dna-profile', require('./routes/dna-profile'));
 
 // Catch 404 and forward to error handler.
 app.use(function(req, res, next) {

@@ -1,7 +1,6 @@
 var MILIS_PER_DAY = 24 * 60 * 60 * 1000;
 
-var express = require('express');
-var router = express.Router();
+var router = require('express').Router();
 var User = require(ROOT_PATH + '/models/User');
 
 router.route('/')
@@ -22,23 +21,24 @@ router.route('/')
 	 * POST: Process the submission from the login page
 	 */
 	.post(function(req, res, next) {
-		console.log('Searching for user with email=' + req.body.email);
-		if	(req.body.email.length < 5) {
+		var email = req.body.email.toLowerCase();
+		console.log('Searching for user with email=' + email);
+		if	(email.length < 5) {
 			res.status(500).send('Invalid email address, must be a least 5 characters.');
 		} else if (req.body.password.length < 5) { 
 			res.status(500).send('Invalid password, must be a least 5 characters.');
 		} else { 
-			var userInfo = {email: req.body.email.toLowerCase()}; 
-			User.findOne(userInfo, function(err, user) {
+			User.findOne({email: email}, function(err, user) {
 				if (err) {return next(err);}
 				if (user && !user.validatePassword(req.body.password)) {
 					console.warn('Invalid password.');
 					res.status(500).send('That email address has already been registered, but the password does not match. Please try again.');
-				} else { 
-					console.log('Authenticated user: ' + user);
-					if (!user) {
-						console.log('Registering new user.');
-						user = new User(userInfo);
+				} else {
+					if (user) {
+						console.log('Password confirmed, logging in existing user: ' + email);
+					} else {
+						console.log('Registering new user: '+ email);
+						user = new User({email: email});
 						user.setPassword(req.body.password).save(); 
 					}
 					res.cookie('userid', user._id, {maxAge: 365 * MILIS_PER_DAY, httpOnly: true});

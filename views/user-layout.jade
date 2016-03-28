@@ -5,8 +5,12 @@ append style
 	
 append header
 	header.top-border
+		div(style="float:left; font-size:20px; line-height:12px; margin-left:-75px;") DinoDNA
 		div
 			span.logged-in
 				|logged in as #[span.username=user.email]
 			span.logout
 				a(href="logout") sign out
+
+append content
+	h1=pageTitle

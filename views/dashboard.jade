@@ -1,0 +1,15 @@
+extends user-layout
+
+append content
+	p Welcome back #{user.email}!
+	div
+		h4 DNA Profiles:
+		if dnaProfiles.length
+			ul
+			each dnaProfile, index in dnaProfiles
+				li
+					a(href='dna-profile?profile=' + dnaProfile._id) #{dnaProfile.name}
+		else
+			span.no-data (none)
+	div
+		a(href="add-dna-profile") (+) add new DNA profile

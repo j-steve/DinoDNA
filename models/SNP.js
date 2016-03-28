@@ -1,13 +1,15 @@
 var mongoose = require('mongoose');
-var Schema = mongoose.Schema;
+var Schema = mongoose.Schema; 
 
-var schema = new Schema({
-	userID: String,
-	rsid: String,
+var SnpSchema = new Schema({
+	dnaProfileID: {type: Schema.ObjectId, required: true, index: true},
+	rsid: {type: String, required: true},
 	chromosome: String,
 	position: Number,
 	allele1: String,
 	allele2: String 
 });
 
-module.exports = mongoose.model('SNP', schema);
+SnpSchema.index({dnaProfileID: 1, rsid: 1}, {unique: true});
+
+module.exports = mongoose.model('SNP', SnpSchema);

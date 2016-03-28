@@ -1,0 +1,11 @@
+extends user-layout
+
+
+append content
+	p Enter the name to use for this DNA profile. You may create multiple profiles, each representing the genome of a single individual.
+	form(method="post")
+		fieldset
+			label
+				span DNA Profile name
+				input(name="name", placeholder='ex., "John Smith"', autofocus)
+				div: input(type="submit" value=">")

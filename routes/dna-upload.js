@@ -1,10 +1,25 @@
-var express = require('express');
-var router = express.Router();
+var router = require('express').Router();
 
 var Readline = require('readline');
 var Promise = require('bluebird');
 var SNP = require(ROOT_PATH + '/models/SNP');
+var DnaProfile = require(ROOT_PATH + '/models/DnaProfile');
 
+// Populate the DNA Profile value on all requests.
+router.all('/', function(req, res, next) {
+	DnaProfile.findById(req.query.profile, function(err, dnaProfile) {
+		if (!err) {res.locals.dnaProfile = dnaProfile;}
+		next(err);
+	});
+});
+
+/* File Upload GET */
+router.get('/', function(req, res, next) {
+	DnaProfile.findById(req.query.profile, function(err, dnaProfile) {
+		if (err) {return next(err);}
+		res.render('dna-upload', {pageTitle: 'Upload DNA Data'});
+	});
+});
 
 /* File Upload POST */
 router.post('/', function(req, res, next) {
@@ -49,8 +64,15 @@ router.post('/', function(req, res, next) {
 				res.status(500).end('Invalid file: must be AncestryDNA file export.');
 				lineNo = -1;
 			} else if (lineNo > 17) { // skip comments and header 
-				var lp = line.split('\t'); 
-				snps.push({userID: req.cookies.userid, rsid: lp[0], chromosome: lp[1], position: lp[2], allele1: lp[3], allele2: lp[4]});
+				var lineParts = line.split('\t');  
+				snps.push({
+					dnaProfileID: res.locals.dnaProfile._id,
+					rsid: lineParts[0],
+					chromosome: lineParts[1],
+					position: lineParts[2],
+					allele1: lineParts[3],
+					allele2: lineParts[4]
+				});
 			}
 		});
 		

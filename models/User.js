@@ -1,11 +1,17 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var bcrypt   = require('bcrypt-nodejs');
+var DnaProfile = require('./DnaProfile');
 
-var UserSchema = new Schema({ 
-	email: String,
-	password: String
-});
+var UserSchema = new Schema(
+	{
+		email: {type: String, required: true, index: true, unique: true},
+		password: {type: String, required: true}
+	},
+	{
+		timestamps: true
+	}
+);
 
 /**
  * Sets the password by hashing the given password value.
