@@ -2,7 +2,7 @@ var router = require('express').Router();
 
 var Readline = require('readline');
 var Promise = require('bluebird');
-var SNP = require(ROOT_PATH + '/models/SNP');
+var DnaProfileSnp = require(ROOT_PATH + '/models/DnaProfileSnp');
 var DnaProfile = require(ROOT_PATH + '/models/DnaProfile');
 
 // Populate the DNA Profile value on all requests.
@@ -48,7 +48,7 @@ router.post('/', function(req, res, next) {
 			
 			if (snps.length) {  
 				var snpCount = snps.length;
-				var insertPromise = SNP.collection.insert(snps).then(function() {
+				var insertPromise = DnaProfileSnp.collection.insert(snps).then(function() {
 					console.log('Inserted', snpCount, 'records succesfully.');
 				});
 				inserts.push(insertPromise);

@@ -1,0 +1,31 @@
+extends layout
+
+append content
+	div
+		h1 Admin Page
+		p This page lets you import data from other sites to populate the database.
+		p It won't be accessible to the general public and most of its functions should only have to be run once to populate data.
+	div(style="display:inline-block; padding:5px 15px;")
+		label
+			b Click here to import data from SNPedia: 
+			button(onclick="ajax('load-snpedia')") Load Data
+		div(style="margin-left: 25px;")
+			pre#resultMsg
+			pre#errorMsg.errMsg
+
+append script
+	script.
+		function ajax(url) {
+				document.getElementById('resultMsg').innerHTML = '';
+				document.getElementById('errorMsg').innerHTML = '';
+				var req = new XMLHttpRequest();
+				req.onreadystatechange = function() {
+					if (req.readyState === XMLHttpRequest.DONE) {
+						var elementId = (req.status === 200) ? 'resultMsg' : 'errorMsg'; 
+						document.getElementById(elementId).innerHTML = req.responseText;
+					}
+				};
+				req.open('POST', 'admin/' + url);
+				req.send();
+			}
+					

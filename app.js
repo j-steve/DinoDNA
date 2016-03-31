@@ -36,6 +36,9 @@ app.use('/', require('./routes/landing'));
 app.use('/login', require('./routes/login'));
 app.use('/logout', require('./routes/logout'));
 
+// Setup routing for admin pages 
+app.use('/admin', require('./routes/admin'));
+
 // Setup routing for authenticated pages.
 app.use(require('./utils/auth'));
 app.use('/start', require('./routes/start'));
