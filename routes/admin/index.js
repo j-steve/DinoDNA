@@ -13,18 +13,29 @@ router.get('/', function(req, res, next) {
 var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=query&list=categorymembers&cmtitle=Category:In_dbSNP&continue&cmcontinue=';
 
 router.post('/load-snpedia', function(req, res, next) {
-	var continueFrom = '';
 	var SNPs = [];
-	request(SNPEDIA_URL + continueFrom, function(err, response, body) {
-		if (err) {return res.status(500).send('ERROR: ' + err);}
-		var json = JSON.parse(body);
-		if (!json.batchcomplete) {
-			json.query.categorymembers.forEach(function(member) {
-				SNPs.push({rsid: member.title});
-			});
-		}
-		res.send(SNPs);
-	});
+	sendRequest(req.body.startFrom || '');
+	
+	var loopCount = 0;
+	function sendRequest(startFrom) {
+			console.log('starting from:', startFrom)
+			request(SNPEDIA_URL + startFrom, function(err, response, body) {
+			if (err) {return res.status(500).send('ERROR: ' + err);}
+			var json = JSON.parse(body);
+			if (json.error) {
+				return res.status(500).send('ERROR: ' + json.error.info);
+			} else if (!json.batchcomplete && loopCount++ < req.body.maxPageCount) {
+				json.query.categorymembers.forEach(function(member) {
+					SNPs.push({rsid: member.title});
+				});
+				var continueFrom = json['continue'].cmcontinue;
+				sendRequest(continueFrom);
+			} else {
+				var responseJson = {continueFrom: startFrom, snps: SNPs}
+				res.send(responseJson);
+			}
+		});
+	}
 	
 });
 

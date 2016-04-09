@@ -5,17 +5,24 @@ append content
 		h1 Admin Page
 		p This page lets you import data from other sites to populate the database.
 		p It won't be accessible to the general public and most of its functions should only have to be run once to populate data.
-	div(style="display:inline-block; padding:5px 15px;")
-		label
-			b Click here to import data from SNPedia: 
-			button(onclick="ajax('load-snpedia')") Load Data
+	form(style="display:inline-block; padding:5px 15px;", onsubmit="ajax(this, 'load-snpedia'); return false;")
+		h3 Load data from SNPedia...
+		fieldset
+			label
+				span Max pages
+				input(name="maxPageCount", type="number", value="2", min="1", style="width: 50px;")
+			label
+				span Start from
+				input#startFrom(name="startFrom", style="width: 250px;")
+		label(style="display:block;")
+			input(type="submit", value="Load Data")
 		div(style="margin-left: 25px;")
 			pre#resultMsg
 			pre#errorMsg.errMsg
 
 append script
 	script.
-		function ajax(url) {
+		function ajax(form, url) {
 				document.getElementById('resultMsg').innerHTML = '';
 				document.getElementById('errorMsg').innerHTML = '';
 				var req = new XMLHttpRequest();
@@ -23,9 +30,20 @@ append script
 					if (req.readyState === XMLHttpRequest.DONE) {
 						var elementId = (req.status === 200) ? 'resultMsg' : 'errorMsg'; 
 						document.getElementById(elementId).innerHTML = req.responseText;
+						if (req.status === 200) {
+							document.getElementById('startFrom').value = JSON.parse(req.responseText).continueFrom;
+						}
 					}
 				};
 				req.open('POST', 'admin/' + url);
-				req.send();
-			}
-					
+				req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); 
+				req.send(encodeForm(form.elements));
+			}		
+
+		function encodeForm(elements) {
+			var elements = [].slice.call(elements); // convert array-line to true array
+			var values = elements.map(function(element) {
+				return encodeURIComponent(element.name) + '=' + encodeURIComponent(element.value);
+			});
+			return values.join('&');
+		}

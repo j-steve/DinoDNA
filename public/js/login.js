@@ -13,11 +13,11 @@ function tryLogin(form) {
 	};
 	req.open('POST', window.location.href);
 	req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); 
-	req.send(encodeForm(form));
+	req.send(encodeForm(form.elements));
 }
 
-function encodeForm(form) {
-	var elements = [].slice.call(form.elements); // convert array-line to true array
+function encodeForm(elements) {
+	var elements = [].slice.call(elements); // convert array-line to true array
 	var values = elements.map(function(element) {
 		return encodeURIComponent(element.name) + '=' + encodeURIComponent(element.value);
 	});
