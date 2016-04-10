@@ -28,6 +28,8 @@ router.post('/load-snpedia', function(req, res, next) {
 	sendRequest(req.body.startFrom || '');
 	
 	var loopCount = 1;
+	var changeCount = 0;
+	var dupCount = 0;
 	function sendRequest(startFrom) {
 		console.log('starting from:', startFrom)
 		request(SNPEDIA_URL + startFrom, function(err, response, body) {
@@ -40,12 +42,14 @@ router.post('/load-snpedia', function(req, res, next) {
 			var snps = json.query.categorymembers.map(x => ({rsid: x.title, snpedia: true}));
 			insert('snp', snps).then(function(dbResp) {
 				console.log('\tInserted', dbResp.affectedRows, 'rows.');
-				if (!json.batchcomplete) {
-					var continueFrom = json.continue.cmcontinue;
-					insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: continueFrom});
-				}
-				if (json.batchcomplete || loopCount++ >= req.body.maxPageCount) {
-					res.send(json);
+				if (json.batchcomplete) {
+					insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: 'DONE!!'});
+					res.send({msg: 'ALL DONE!!', });
+				} 
+				var continueFrom = json.continue ? json.continue.cmcontinue : null;
+				insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: continueFrom});
+				if (loopCount++ >= req.body.maxPageCount) {
+					res.send({continueFrom:continueFrom, dbResp:dbResp});
 				} else {
 					sendRequest(continueFrom);
 				}
@@ -68,7 +72,7 @@ function insert(tableName, values) {
 	values = values.map(x => columns.map(c => x[c])); // convert values members from objects to arrays.
 	
 	// Create and execute SQL statement.
-	return executeSql('INSERT INTO ?? (??) VALUES ?', [tableName, columns, values]);
+	return executeSql('INSERT IGNORE INTO ?? (??) VALUES ?', [tableName, columns, values]);
 }
 
 function executeSql(sql, values) {

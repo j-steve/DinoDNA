@@ -31,7 +31,7 @@ append script
 						var elementId = (req.status === 200) ? 'resultMsg' : 'errorMsg'; 
 						document.getElementById(elementId).innerHTML = req.responseText;
 						if (req.status === 200) {
-							document.getElementById('startFrom').value = JSON.parse(req.responseText).continue.cmcontinue;
+							document.getElementById('startFrom').value = JSON.parse(req.responseText).continueFrom;
 						}
 					}
 				};
