@@ -19,6 +19,7 @@
 	"bluebird": "3.3.x",
 	"bcrypt-nodejs" : "latest",
 	"passport" : "0.3.x",
-	"request": "2.69.x"
+	"request": "2.69.x",
+	"mysql": "2.10.x"
   }
 }

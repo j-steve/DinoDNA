@@ -13,7 +13,7 @@ append content
 				input(name="maxPageCount", type="number", value="2", min="1", style="width: 50px;")
 			label
 				span Start from
-				input#startFrom(name="startFrom", style="width: 250px;")
+				input#startFrom(name="startFrom", style="width: 250px;", value=continueFrom)
 		label(style="display:block;")
 			input(type="submit", value="Load Data")
 		div(style="margin-left: 25px;")
@@ -31,7 +31,7 @@ append script
 						var elementId = (req.status === 200) ? 'resultMsg' : 'errorMsg'; 
 						document.getElementById(elementId).innerHTML = req.responseText;
 						if (req.status === 200) {
-							document.getElementById('startFrom').value = JSON.parse(req.responseText).continueFrom;
+							document.getElementById('startFrom').value = JSON.parse(req.responseText).continue.cmcontinue;
 						}
 					}
 				};
