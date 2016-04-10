@@ -12,8 +12,8 @@ var db = mysql.createPool({
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-	var sql = 'SELECT ?? FROM ?? WHERE ? ORDER BY ?? LIMIT 1';
-	var sqlArgs = ['message', 'log', {action: 'SNPedia continueFrom'}, 'timestamp'];
+	var sql = 'SELECT ?? FROM ?? WHERE ? ORDER BY ?? DESC LIMIT 1';
+	var sqlArgs = ['message', 'log', {action: 'SNPedia continueFrom'}, 'entry_id'];
 	executeSql(sql, sqlArgs).then(function(results) {
 		res.render('admin', {continueFrom: results.length ? results[0].message : ''});
 	}).catch(next);
@@ -27,7 +27,7 @@ var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=query&list
 router.post('/load-snpedia', function(req, res, next) {
 	sendRequest(req.body.startFrom || '');
 	
-	var loopCount = 0;
+	var loopCount = 1;
 	function sendRequest(startFrom) {
 		console.log('starting from:', startFrom)
 		request(SNPEDIA_URL + startFrom, function(err, response, body) {
@@ -38,17 +38,18 @@ router.post('/load-snpedia', function(req, res, next) {
 			
 			// Add SNPs to database.
 			var snps = json.query.categorymembers.map(x => ({rsid: x.title, snpedia: true}));
-			insert('snp', snps);
-			
-			// Contine to next page, or send HTTP response if finished or max page count limit reached.
-			if (json.batchcomplete || loopCount++ >= req.body.maxPageCount) {
-				res.send(json);
-			} else {
-				// Grab "continueFrom", log to DB, and execute next request.
-				var continueFrom = json['continue'].cmcontinue;
-				insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: continueFrom});
-				sendRequest(continueFrom);
-			}
+			insert('snp', snps).then(function(dbResp) {
+				console.log('\tInserted', dbResp.affectedRows, 'rows.');
+				if (!json.batchcomplete) {
+					var continueFrom = json.continue.cmcontinue;
+					insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: continueFrom});
+				}
+				if (json.batchcomplete || loopCount++ >= req.body.maxPageCount) {
+					res.send(json);
+				} else {
+					sendRequest(continueFrom);
+				}
+			}).catch(sendErrorResp);
 		});
 	}
 	
