@@ -9,6 +9,9 @@ append content
 		h3 Load data from SNPedia...
 		fieldset
 			label
+				span Category
+				input(name="category", type="text", value="SNPs_on_chromosome_1", style="width: 250px;", onkeydown="document.getElementById('startFrom').value='';")
+			label
 				span Max pages
 				input(name="maxPageCount", type="number", value="2", min="1", style="width: 50px;")
 			label

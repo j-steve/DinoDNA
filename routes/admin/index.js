@@ -22,17 +22,17 @@ router.get('/', function(req, res, next) {
 /* POST home page. */
 //var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?action=askargs&conditions=Category:Is%20a%20genotype&printouts=magnitude|'
 //var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=ask&query=[[Category:Is%20a%20genotype]]|?magnitude|?Summary|sort=magnitude|order=desc|limit=100|offset=';
-var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=query&list=categorymembers&cmtitle=Category:In_dbSNP&continue&cmlimit=500&cmcontinue=';
+var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=query&list=categorymembers&cmtitle=Category:{{CATEGORY}}&continue&cmlimit=500&cmcontinue=';
 
 router.post('/load-snpedia', function(req, res, next) {
 	sendRequest(req.body.startFrom || '');
-	
-	var loopCount = 1;
+
+	var loopCount = 0;
 	var changeCount = 0;
-	var dupCount = 0;
 	function sendRequest(startFrom) {
-		console.log('starting from:', startFrom)
-		request(SNPEDIA_URL + startFrom, function(err, response, body) {
+		var url = SNPEDIA_URL.replace(/\{\{CATEGORY\}\}/g, req.body.category) + (startFrom || '');
+		console.log('Sending URL request to:', url);
+		request(url + startFrom, function(err, response, body) {
 			// Handle errors.
 			if (err) {return sendErrorResp(err);}
 			var json = JSON.parse(body);
@@ -42,14 +42,15 @@ router.post('/load-snpedia', function(req, res, next) {
 			var snps = json.query.categorymembers.map(x => ({rsid: x.title, snpedia: true}));
 			insert('snp', snps).then(function(dbResp) {
 				console.log('\tInserted', dbResp.affectedRows, 'rows.');
-				if (json.batchcomplete) {
-					insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: 'DONE!!'});
-					res.send({msg: 'ALL DONE!!', });
-				} 
+				changeCount += dbResp.affectedRows;
 				var continueFrom = json.continue ? json.continue.cmcontinue : null;
+				if (json.batchcomplete || !continueFrom) {
+					insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: 'DONE!!'});
+					return res.send('ALL DONE!! Inserted: ' + changeCount);
+				} 
 				insert('log', {domain: 'data', action: 'SNPedia continueFrom', message: continueFrom});
 				if (loopCount++ >= req.body.maxPageCount) {
-					res.send({continueFrom:continueFrom, dbResp:dbResp});
+					res.send({changeCount:changeCount, continueFrom:continueFrom, dbResp:dbResp});
 				} else {
 					sendRequest(continueFrom);
 				}
@@ -58,14 +59,14 @@ router.post('/load-snpedia', function(req, res, next) {
 	}
 	
 	function sendErrorResp(err) {
-		res.status(500).send('ERROR: ' + err);
+		res.status(500).send('ERROR: ' + err + ' [INSERTED: ' + changeCount + ']');
 	}
 	
 });
 
 function insert(tableName, values) {
 	values = [].concat(values); // convert values param to array if necessary.
-	if (!values.length) {reject('Cannot insert an empty list.');}
+	if (!values.length) {return Promise.reject('Cannot insert an empty list.');}
 	
 	// Get columns, then convert objects to list for bulk insert.
 	var columns = Object.keys(values[0]);
