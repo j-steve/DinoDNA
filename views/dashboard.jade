@@ -8,7 +8,7 @@ append content
 			ul
 			each dnaProfile, index in dnaProfiles
 				li
-					a(href='dna-profile?profile=' + dnaProfile._id) #{dnaProfile.name}
+					a(href='dna-profile?profile=' + dnaProfile.id) #{dnaProfile.name}
 		else
 			span.no-data (none)
 	div

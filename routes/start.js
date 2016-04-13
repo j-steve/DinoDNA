@@ -1,11 +1,10 @@
 var router = require('express').Router();
-var DnaProfile = require(ROOT_PATH + '/models/DnaProfile');
+var DnaProfile = require('../models/DnaProfile');
 
 router.get('/', function(req, res, next) {
-	DnaProfile.findOne({userID: res.locals.user._id}, function(err, dnaProfile) {
-		if (err) {return next(err);} 
-		res.redirect(dnaProfile ? '/dash' : '/add-dna-profile');
-	});
+	res.locals.user.getDnaProfiles().then(function(dnaProfiles) {
+		res.redirect(dnaProfiles.length ? '/dash' : '/add-dna-profile');
+	}).catch(next);
 });
 
 module.exports = router;

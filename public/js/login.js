@@ -12,12 +12,12 @@ function tryLogin(form) {
 		}
 	};
 	req.open('POST', window.location.href);
-	req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded'); 
+	req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
 	req.send(encodeForm(form.elements));
 }
 
 function encodeForm(elements) {
-	var elements = [].slice.call(elements); // convert array-line to true array
+	elements = [].slice.call(elements); // convert array-line to true array
 	var values = elements.map(function(element) {
 		return encodeURIComponent(element.name) + '=' + encodeURIComponent(element.value);
 	});

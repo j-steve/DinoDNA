@@ -1,15 +1,13 @@
-var mongoose = require('mongoose');
-var Schema = mongoose.Schema; 
+var Promise	= require('bluebird');
+var db		= require('../lib/db');
 
-var DnaProfileSnpSchema = new Schema({
-	dnaProfileID: {type: Schema.ObjectId, required: true, index: true},
+function DnaProfileSnp() {
+	/*dnaProfileID: {type: Schema.ObjectId, required: true, index: true},
 	rsid: {type: String, required: true},
 	chromosome: String,
 	position: Number,
 	allele1: String,
-	allele2: String 
-});
+	allele2: String*/
+}
 
-DnaProfileSnpSchema.index({dnaProfileID: 1, rsid: 1}, {unique: true});
-
-module.exports = mongoose.model('DnaProfileSnp', DnaProfileSnpSchema);
+module.exports = DnaProfileSnp
