@@ -1,0 +1,37 @@
+{
+  "ecmaVersion": 6,
+  "loadEagerly": [
+    "routes/**/*.js"
+  ],
+  "plugins": {
+    "guess-types": {
+      
+    },
+    "outline": {
+      
+    },
+    "es_modules": {
+      
+    },
+    "doc_comment": {
+      "strong": true
+    },
+    "jshint": {
+      "configFile": ".jshintrc"
+    },
+    "node": {
+      
+    },
+    "node-express": {
+      
+    },
+    "node-extension": {
+      
+    }
+  },
+  "libs": [
+    "ecma5",
+    "ecma6",
+    "browser"
+  ]
+}

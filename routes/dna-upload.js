@@ -1,9 +1,11 @@
-var router = require('express').Router();
+var router			= require('express').Router();
+var Readline		= require('readline');
+var Promise			= require('bluebird');
+var db				= require('../lib/db');
+var DnaProfile		= require('../models/DnaProfile');
+var DnaProfileSnp	= require('../models/DnaProfileSnp');
 
-var Readline = require('readline');
-var Promise = require('bluebird');
-var DnaProfileSnp = require('../models/DnaProfileSnp');
-var DnaProfile = require('../models/DnaProfile');
+var COLUMN_NAMES = ['rsid', 'chromosome', 'position', 'allele1', 'allele2', 'dna_profile_id'];
 
 // Populate the DNA Profile value on all requests.
 router.all('/', function(req, res, next) {
@@ -46,9 +48,8 @@ router.post('/', function(req, res, next) {
 			console.log('Next chunk recieved:', data.length, 'bytes of data; attempting to upload', snps.length, 'new records.');
 
 			if (snps.length) {
-				var snpCount = snps.length;
-				var insertPromise = DnaProfileSnp.collection.insert(snps).then(function() {
-					console.log('Inserted', snpCount, 'records succesfully.');
+				var insertPromise = db.batchInsert('dna_profile_snp', COLUMN_NAMES, snps).then(function(changedRows) {
+					console.log('Inserted', changedRows, 'records succesfully.');
 				});
 				inserts.push(insertPromise);
 				snps = [];
@@ -63,15 +64,7 @@ router.post('/', function(req, res, next) {
 				res.status(500).end('Invalid file: must be AncestryDNA file export.');
 				lineNo = -1;
 			} else if (lineNo > 17) { // skip comments and header
-				var lineParts = line.split('\t');
-				snps.push({
-					dnaProfileID: res.locals.dnaProfile.id,
-					rsid: lineParts[0],
-					chromosome: lineParts[1],
-					position: lineParts[2],
-					allele1: lineParts[3],
-					allele2: lineParts[4]
-				});
+				snps.push(line.split('\t').concat(res.locals.dnaProfile.id));
 			}
 		});
 
@@ -90,12 +83,12 @@ router.post('/', function(req, res, next) {
 	 * @param {Stream} stream
 	 * @return {Promise}
 	 */
-	function streamToPromise(stream) {
+	/*function streamToPromise(stream) {
 	    return new Promise(function(resolve, reject) {
 	        stream.on("end", resolve);
 	        stream.on("error", reject);
 	    });
-	}
+	}*/
 });
 
 module.exports = router;

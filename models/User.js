@@ -45,7 +45,7 @@ function User(row) {
 	this.insert = function() {
 		if (self.id) {return Promise.reject('Cannot insert: ID already exists, value="' + self.id + '".');}
 		var sql = 'INSERT INTO ?? SET ?';
-		return db.executeSql(sql, 'user', self).spread(function(result) {
+		return db.executeSql(sql, 'user', self).then(function(result) {
 			self.id = result.insertId;
 			return self;
 		});
@@ -54,19 +54,17 @@ function User(row) {
 	this.update = function() {
 		if (!self.id) {return Promise.reject('Cannot update: ID is null.');}
 		var sql = 'UPDATE ?? SET ? WHERE ?';
-		return db.executeSql(sql, 'user', self, {id: self.id}).spread(function(result) {
+		return db.executeSql(sql, 'user', self, {id: self.id}).then(function(result) {
 			return self;
 		});
 	};
 }
 
 User.getById = function(id) {
-	if (arguments.length > 1) {throw new Error('Invalid number of arguments: only 1 argument allowed.');}
 	return User.getOne({id: id});
 };
 
 User.getOne = function(where) {
-	if (arguments.length > 1) {throw new Error('Invalid number of arguments: only 1 argument allowed.');}
 	return User.getMany(where).then(function(results) {
 		if (results.length > 1) {throw new Error('More than 1 record returned.');}
 		return results.length === 0 ? null : results[0];
@@ -74,8 +72,7 @@ User.getOne = function(where) {
 };
 
 User.getMany = function(where) {
-	if (arguments.length > 1) {throw new Error('Invalid number of arguments: only 1 argument allowed.');}
-	return db.executeSql('SELECT * FROM ?? WHERE ?', 'user', where).spread(function(rows) {
+	return db.executeSql('SELECT * FROM ?? WHERE ?', 'user', where).then(function(rows) {
 		return rows && rows.map(row => new User(row));
 	});
 };

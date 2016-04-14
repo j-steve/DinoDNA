@@ -20,7 +20,9 @@ app.set('view engine', 'jade');
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+	extended : false
+}));
 app.use(busboy());
 app.use(lessMiddleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -28,8 +30,11 @@ app.use(cookieParser());
 
 // Establish DB connection and load DB Models.
 var DB_CONN = 'mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.mlab.com:47335/heroku_tfldttfx';
-mongoose.connect(DB_CONN, {promiseLibrary: require('bluebird')});
-mongoose.connection.on('error', console.error.bind(console, 'connection error:'));
+mongoose.connect(DB_CONN, {
+	promiseLibrary : require('bluebird')
+});
+mongoose.connection.on('error', console.error
+		.bind(console, 'connection error:'));
 
 // Setup routing for public pages.
 app.use('/', require('./routes/landing'));
@@ -49,30 +54,19 @@ app.use('/dna-profile', require('./routes/dna-profile'));
 
 // Catch 404 and forward to error handler.
 app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+	var err = new Error('Not Found');
+	err.status = 404;
+	next(err);
 });
 
 // Handle Errors.
-if (app.get('env') === 'development') {
-	// Development: print stacktrace.
-	app.use(function(err, req, res, next) {
-		res.status(err.status || 500);
-		res.render('error', {
-			message: err.message,
-			error: err
-		});
+app.use(function(err, req, res, next) {
+	console.error('ERROR:', err);
+	res.status(err.status || 500);
+	res.render('error', {
+		message : err.message || err,
+		error : app.get('env') === 'development' ? err : null
 	});
-} else {
-	// Production: no stacktraces leaked to user.
-	app.use(function(err, req, res, next) {
-	  res.status(err.status || 500);
-	  res.render('error', {
-	    message: err.message,
-	    error: {}
-	  });
-	});
-}
+});
 
 module.exports = app;
