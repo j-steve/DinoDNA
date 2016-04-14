@@ -1,5 +1,6 @@
-var Promise	= require('bluebird');
-var db		= require('../lib/db');
+var Promise			= require('bluebird');
+var db				= require('../lib/db');
+var DnaProfileSnp	= require('./DnaProfileSnp');
 
 function DnaProfile(row) {
 	var self = this;
@@ -37,7 +38,7 @@ function DnaProfile(row) {
 	this.insert = function() {
 		if (self.id) {return Promise.reject('Cannot insert: ID already exists, value="' + self.id + '".');}
 		var sql = 'INSERT INTO ?? SET ?';
-		return db.executeSql(sql, 'dna_profile', self).spread(function(result) {
+		return db.executeSql(sql, 'dna_profile', self).then(function(result) {
 			self.id = result.insertId;
 			return self;
 		});
@@ -46,23 +47,21 @@ function DnaProfile(row) {
 	this.update = function() {
 		if (!self.id) {return Promise.reject('Cannot update: ID is null.');}
 		var sql = 'UPDATE ?? SET ? WHERE ?';
-		return db.executeSql(sql, 'dna_profile', self, {id: self.id}).spread(function(result) {
+		return db.executeSql(sql, 'dna_profile', self, {id: self.id}).then(function(result) {
 			return self;
 		});
 	};
 
 	this.snpCount = function() {
-		return db.executeSql('SELECT COUNT(*) FROM ?? WHERE ?', 'dna_allele', {dna_profile_id: self.id}).spread(x => x[0]['COUNT(*)']);
+		return DnaProfileSnp.count({dna_profile_id: self.id});
 	};
 }
 
 DnaProfile.getById = function(id) {
-	if (arguments.length > 1) {throw new Error('Invalid number of arguments: only 1 argument allowed.');}
 	return DnaProfile.getOne({id: id});
 };
 
 DnaProfile.getOne = function(where) {
-	if (arguments.length > 1) {throw new Error('Invalid number of arguments: only 1 argument allowed.');}
 	return DnaProfile.getMany(where).then(function(results) {
 		if (results.length > 1) {throw new Error('More than 1 record returned.');}
 		return results.length === 0 ? null : results[0];
@@ -70,8 +69,7 @@ DnaProfile.getOne = function(where) {
 };
 
 DnaProfile.getMany = function(where) {
-	if (arguments.length > 1) {throw new Error('Invalid number of arguments: only 1 argument allowed.');}
-	return db.executeSql('SELECT * FROM ?? WHERE ?', 'dna_profile', where).spread(function(rows) {
+	return db.executeSql('SELECT * FROM ?? WHERE ?', 'dna_profile', where).then(function(rows) {
 		return rows && rows.map(row => new DnaProfile(row));
 	});
 };
