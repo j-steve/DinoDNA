@@ -73,7 +73,7 @@ router.post('/', function(req, res, next) {
 
 			Promise.all(inserts).then(function() {
 				console.log('All uploads complete.');
-			})['catch'](console.error);
+			}).catch(console.error);
 		});
 	}
 

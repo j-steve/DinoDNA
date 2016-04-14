@@ -5,8 +5,22 @@ append content
 		h1 Admin Page
 		p This page lets you import data from other sites to populate the database.
 		p It won't be accessible to the general public and most of its functions should only have to be run once to populate data.
+	form(style="display:inline-block; padding:5px 15px;", onsubmit="ajax(this, 'load-genosets'); return false;")
+		h3 Load Genoset data from SNPedia...
+		fieldset
+			label
+				span Max pages
+				input(name="maxPageCount", type="number", value="2", min="1", style="width: 50px;")
+			label
+				span Start from
+				input#startFrom(name="startFrom", style="width: 250px;", value=continueFrom)
+		label(style="display:block;")
+			input(type="submit", value="Load Data")
+		div(style="margin-left: 25px;")
+			pre#resultMsg
+			pre#errorMsg.errMsg
 	form(style="display:inline-block; padding:5px 15px;", onsubmit="ajax(this, 'load-snpedia'); return false;")
-		h3 Load data from SNPedia...
+		h3 Load SNP data from SNPedia...
 		fieldset
 			label
 				span Category
