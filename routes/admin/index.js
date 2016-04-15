@@ -2,11 +2,14 @@ var router	= require('express').Router();
 var request = require('request');
 var Promise	= require('bluebird');
 var db 		= require('../../lib/db');
-var web 		= require('../../lib/web');
+var web 	= require('../../lib/web');
+var text 	= require('../../lib/text');
 
 //var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?action=askargs&conditions=Category:Is%20a%20genotype&printouts=magnitude|'
 //var SNPEDIA_URL = http://bots.snpedia.com/api.php?format=json&action=ask&query=[[Category:Is%20a%20genotype]]|?magnitude|?Summary|sort=magnitude|order=desc|limit=100|offset=';
 var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=query&list=categorymembers&cmtitle=Category:{{CATEGORY}}&continue&cmlimit=500&cmcontinue=';
+var GENOSET_URL = 'http://bots.snpedia.com/api.php?format=json&action=ask&query=[[Category:Is%20a%20genoset]]|?Magnitude|?Repute|?Summary|limit=100|offset=';
+var SNP_URL = 'http://bots.snpedia.com/api.php?format=json&action=parse&prop=links&page=';
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -16,21 +19,70 @@ router.get('/', function(req, res, next) {
 /* POST home page. */
 router.post('/load-snpedia', function(req, res, next) {
 	var url = SNPEDIA_URL.replace(/\{\{CATEGORY\}\}/g, req.body.category);
-	var extractor = x => ({rsid: x.title, snpedia: true});
+	var extractor = json => json.query.categorymembers.map(x => ({rsid: x.title, snpedia: true}));
 	sendRequest('snp', extractor, url, req.body.startFrom).then(resp => res.send(resp)).catch(err => res.status(500).send(err));
 });
 
 
 /* POST home page. */
 router.post('/load-genosets', function(req, res, next) {
-	var url = SNPEDIA_URL.replace(/\{\{CATEGORY\}\}/g, 'Is_a_genoset');
-	var extractor = x => ({name: x.title, snpedia: true});
-	sendRequest('genoset', extractor, url, req.body.startFrom).then(resp => res.send(resp)).catch(function(err) {
+	var extractor = function(json) {
+		var results = json.query.results;
+		return Object.keys(results).map(function(key) {
+			console.log(results[key]);
+			var p = results[key].printouts;
+			return {name: results[key].fulltext, magnitude: p.Magnitude[0], repute: p.Repute[0], summary: p.Summary[0]};
+		});
+	};
+	sendRequest('genoset', extractor, GENOSET_URL, req.body.startFrom).then(resp => res.send(resp)).catch(function(err) {
 		console.error(err);
 		console.trace(err);
 		res.status(500).send(err);
 	});
 });
+
+router.all('/populate-genosets', function(req, res, next) {
+	var url = 'http://bots.snpedia.com/api.php?format=json&action=parse&prop=text&page=';
+	db.executeSql('SELECT * FROM genoset WHERE criteria IS NULL').then(function(gsRows) {
+		gsRows.forEach(function(gs) {
+			web.getJsonResponse(url + gs.name + '/criteria').then(function(urlResp) {
+				if (!urlResp.parse.text) {return;}
+				console.log(urlResp);
+				var criteria = text.parseOne(urlResp.parse.text['*'], '<pre>', '</pre>');
+				db.executeSql('UPDATE genoset SET ? WHERE ?', {criteria: criteria}, {id: gs.id});
+			});
+		});
+	});
+	res.send('ok');
+});
+
+
+
+router.all('/populate-snps', function(req, res, next) {
+	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
+	var sql = 'SELECT * FROM snp WHERE snpedia = 1 ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
+	db.executeSql(sql).then(function(snpRows) {
+		return Promise.each(snpRows, function(snp) {
+			return web.getJsonResponse(SNP_URL + snp.rsid).then(function(urlResp) {
+				if (!urlResp.parse || !urlResp.parse.links) {return console.error('Bad response for', snp.rsid, urlResp);}
+				var snpPrefix = snp.rsid.toUpperCase() + '(';
+				var seenAlleles = [];
+				return Promise.each(urlResp.parse.links, function(link) {
+					var name = link['*'] && link['*'].toUpperCase();
+					if (name.startsWith(snpPrefix) && seenAlleles.indexOf(name) === -1) {
+						seenAlleles.push(name);
+						name = name.slice(snpPrefix.length, -1);
+						var alleles = name.split(';').map(x => x.trim());
+						var alleleData = {snp_rsid: snp.rsid, allele1: alleles[0], allele2: alleles[1]};
+						return db.executeSql('INSERT INTO snp_allele SET ?', alleleData).catch({code:'ER_DUP_ENTRY'}, err =>console.warn(err.message));
+					}
+				}).then(x => db.executeSql('UPDATE snp SET snpedia = 2 WHERE rsid = ?', snp.rsid));
+			});
+		});
+	}).then(x => res.send('ok! inserted: '+ x.length + '<br><br>' + x.map(xx => xx.rsid).join('<br>')));
+});
+
+
 
 /* POST home page. */
 router.post('/load-genotypes', function(req, res, next) {
@@ -51,8 +103,7 @@ function sendRequest(tableName, extractor, url, startFrom, loopCount, changeCoun
 	if (!changeCount) {changeCount = 0;}
 
 	return web.getJsonResponse(url + (startFrom || '')).then(function(json) {
-		var values = json.query.categorymembers.map(extractor);
-		return insert(tableName, values).then(function(dbResp) {
+		return insert(tableName, extractor(json)).then(function(dbResp) {
 			console.log('\tInserted', dbResp.affectedRows, 'rows.');
 			changeCount += dbResp.affectedRows;
 			var continueFrom = json.continue ? json.continue.cmcontinue : null;
