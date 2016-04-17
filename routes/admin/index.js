@@ -10,6 +10,11 @@ var text 	= require('../../lib/text');
 var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?format=json&action=query&list=categorymembers&cmtitle=Category:{{CATEGORY}}&continue&cmlimit=500&cmcontinue=';
 var GENOSET_URL = 'http://bots.snpedia.com/api.php?format=json&action=ask&query=[[Category:Is%20a%20genoset]]|?Magnitude|?Repute|?Summary|limit=100|offset=';
 var SNP_URL = 'http://bots.snpedia.com/api.php?format=json&action=parse&prop=links&page=';
+var SNP_EXTRACT_URL = 'http://bots.snpedia.com/api.php?format=json&action=parse&prop=text|categories&page=';
+
+
+router.use('/snp-progress', require('./snp-progress'));
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -56,10 +61,32 @@ router.all('/populate-genosets', function(req, res, next) {
 	res.send('ok');
 });
 
+router.all('/extract-snps', function(req, res, next) {
+	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
+	var startTime = Date.now();
+	var sql = 'SELECT * FROM snp WHERE snpedia in (1, 2) ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
+	Promise.each(db.executeSql(sql), function(snp) {
+		return web.getJsonResponse(SNP_EXTRACT_URL + snp.rsid).then(function(urlResp) {
+			if (!urlResp.parse || !urlResp.parse.text) {return console.error('Bad response for', snp.rsid, urlResp);}
+			var cats = urlResp.parse.categories.map(x => x['*']).join('\n');
+			var data = {snpedia: 3, snpedia_page: urlResp.parse.text['*'], snpedia_cats: cats};
+			return db.executeSql('UPDATE snp SET ? WHERE rsid = ?', data, snp.rsid);
+		}).catch(console.error);
+	}).then(function(inserts) {
+		var txt = 'ok! inserted: '+ inserts.length + ' record';
+		var elapsedTime = (Date.now() - startTime) / 1000;
+		txt += ' in ' + elapsedTime.toFixed(1) + ' seconds.';
+		txt += ' (avg ' + (elapsedTime/inserts.length).toFixed(1) + ' sec./insert)';
+		txt += '<br><br>' + inserts.map(x => x.rsid).join('<br>');
+		txt += '<script>setTimeout(function() {location.reload();}, 2000);</script>';
+		res.send(txt);
+	}).catch(next);
+});
 
 
 router.all('/populate-snps', function(req, res, next) {
 	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
+	var startTime = Date.now();
 	var sql = 'SELECT * FROM snp WHERE snpedia = 1 ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
 	db.executeSql(sql).then(function(snpRows) {
 		return Promise.each(snpRows, function(snp) {
@@ -79,7 +106,13 @@ router.all('/populate-snps', function(req, res, next) {
 				}).then(x => db.executeSql('UPDATE snp SET snpedia = 2 WHERE rsid = ?', snp.rsid));
 			});
 		});
-	}).then(x => res.send('ok! inserted: '+ x.length + '<br><br>' + x.map(xx => xx.rsid).join('<br>')));
+	}).then(function(inserts) {
+		var txt = 'ok! inserted: '+ inserts.length;
+		var elapsedTime = Date.now() - startTime;
+		txt += ' in ' + elapsedTime/1000 + ' seconds.';
+		txt += '<br><br>' + inserts.map(x => x.rsid).join('<br>');
+		res.send(txt);
+	}).catch(next);
 });
 
 

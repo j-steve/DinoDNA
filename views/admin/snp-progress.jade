@@ -1,0 +1,89 @@
+doctype html
+html(lang='en')
+	head
+		title="SNPs Progress Overview"
+		style.
+			body {font-size:20px;}
+			.dataVal {margin: 0px 5px; font-weight: bold;}
+			p {margin: 5px;}
+			td {text-align:right; font-family:monospace; padding:2px 10px;}
+	body
+		h2="SNPs Progress Overview"
+		div#datatable-container
+		div
+			p
+				|running for:
+				span.dataVal#elapsed-time
+				|minutes
+			p
+				|inserted:
+				span.dataVal#insert-count
+				|records
+			p
+				|avg insert time:
+				span.dataVal#avg-time
+				|seconds / record
+			p
+				|eta:
+				span.dataVal#eta
+				|hours remaining
+			label(style="font-size:14px;margin:25px 15px;display:block; color:gray;")
+				span="refresh delay (seconds): "
+				input#refreshDelay(style="height:14px;width:30px;text-align:right;", value="1")
+		
+		script(type='text/javascript' src='/js/ajax.js')
+		script.
+			refresh();
+
+			var startTime = Date.now();
+			var startRecordCount;
+			function refresh() {
+				ajax().then(function(response) {
+					if (!startRecordCount) {startRecordCount = response.data[2].completed;}
+					
+					var elapsedTime = (Date.now() - startTime) / 1000;
+					var insertCount = response.data[2].completed - startRecordCount;
+					var avgTime = elapsedTime / insertCount;
+					var eta = avgTime * (response.data[0].completed + response.data[1].completed);
+					
+					document.getElementById('elapsed-time').innerHTML = (elapsedTime / 60).toFixed(1);
+					document.getElementById('insert-count').innerHTML = insertCount;
+					document.getElementById('avg-time').innerHTML = avgTime.toFixed(1);
+					document.getElementById('eta').innerHTML = (eta / 60/60).toFixed(1);
+					
+					response.data.forEach(function (row) {
+						row.percent = (row.percent * 100).toFixed(2) + '%';
+						row.completed = row.completed.toLocaleString();
+					});
+					document.getElementById('datatable-container').innerHTML = tablify(response.data);
+					console.log(document.getElementById('refreshDelay').value * 1000);
+					setTimeout(refresh, document.getElementById('refreshDelay').value * 1000);
+				});
+			}
+		
+			function tablify(data) {
+				var result = '<table>';
+				if (data && data.length) {
+					var columns = Object.keys(data[0]);
+					var headers = columns.map(c => '<th>' + c + '</th>');
+					result += '<tr>' + headers.join('') + '</tr>';
+					data.forEach(function(row) {
+						var cells = columns.map(c => '<td>' + row[c] + '</td>');
+						result += '<tr>' + cells.join('') + '</tr>';
+						
+					});
+				} else {
+					result += '<tr><td>(no data)</td></tr>';
+				}
+				return result + '</table>';
+			}
+			
+			function htmlEncode(text) {
+				text = text.replace(/</g, '&lt;');
+				text = text.replace(/>/g, '&gt;');
+				text = text.replace(/&/g, '&amp;');
+				text = text.replace(/"/g, '&quot;');
+				text = text.replace(/\u2013/g, '&ndash;');
+				text = text.replace(/\u2014/g, '&mdash;');
+				return text;
+			}
