@@ -52,6 +52,8 @@ app.use('/dash', require('./routes/dashboard'));
 app.use('/dna-upload', require('./routes/dna-upload'));
 app.use('/dna-profile', require('./routes/dna-profile'));
 
+app.use('/report/compare', require('./routes/report/compare'));
+
 // Catch 404 and forward to error handler.
 app.use(function(req, res, next) {
 	var err = new Error('Not Found');

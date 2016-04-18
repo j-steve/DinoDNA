@@ -64,7 +64,7 @@ router.all('/populate-genosets', function(req, res, next) {
 router.all('/extract-snps', function(req, res, next) {
 	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
 	var startTime = Date.now();
-	var sql = 'SELECT * FROM snp WHERE snpedia in (1, 2) ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
+	var sql = 'SELECT * FROM snp WHERE snpedia = 1 ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
 	Promise.each(db.executeSql(sql), function(snp) {
 		return web.getJsonResponse(SNP_EXTRACT_URL + snp.rsid).then(function(urlResp) {
 			if (!urlResp.parse || !urlResp.parse.text) {return console.error('Bad response for', snp.rsid, urlResp);}

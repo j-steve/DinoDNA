@@ -39,16 +39,16 @@ html(lang='en')
 			var startRecordCount;
 			function refresh() {
 				ajax().then(function(response) {
-					if (!startRecordCount) {startRecordCount = response.data[2].completed;}
+					if (!startRecordCount) {startRecordCount = response.data[1].completed;}
 					
 					var elapsedTime = (Date.now() - startTime) / 1000;
-					var insertCount = response.data[2].completed - startRecordCount;
+					var insertCount = response.data[1].completed - startRecordCount;
 					var avgTime = elapsedTime / insertCount;
-					var eta = avgTime * (response.data[0].completed + response.data[1].completed);
+					var eta = avgTime * (response.data[0].completed);
 					
 					document.getElementById('elapsed-time').innerHTML = (elapsedTime / 60).toFixed(1);
 					document.getElementById('insert-count').innerHTML = insertCount;
-					document.getElementById('avg-time').innerHTML = avgTime.toFixed(1);
+					document.getElementById('avg-time').innerHTML = avgTime.toFixed(2);
 					document.getElementById('eta').innerHTML = (eta / 60/60).toFixed(1);
 					
 					response.data.forEach(function (row) {

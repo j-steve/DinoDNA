@@ -6,3 +6,10 @@ append content
 		|#{snpCount} SNPs
 	a(href="dna-upload?profile=" + dnaProfile.id)
 		|(+) upload additional SNP data to this profile
+	form(action="report/compare")
+		input(type="hidden" name="profile" value=dnaProfile.id)
+		select(name="compareTo")
+			each otherProfile in otherDnaProfiles
+				option(label=otherProfile.name, value=otherProfile.id)
+		input(type="submit" value="run comparison report")
+		
