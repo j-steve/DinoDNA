@@ -64,7 +64,7 @@ router.all('/populate-genosets', function(req, res, next) {
 router.all('/extract-snps', function(req, res, next) {
 	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
 	var startTime = Date.now();
-	var sql = 'SELECT * FROM snp WHERE snpedia = 1 ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
+	var sql = 'SELECT * FROM snp WHERE snpedia = 1 LIMIT ' + (req.query.limit || '50');
 	Promise.each(db.executeSql(sql), function(snp) {
 		return web.getJsonResponse(SNP_EXTRACT_URL + snp.rsid).then(function(urlResp) {
 			if (!urlResp.parse || !urlResp.parse.text) {return console.error('Bad response for', snp.rsid, urlResp);}
@@ -163,5 +163,31 @@ function insert(tableName, values) {
 	// Create and execute SQL statement.
 	return db.executeSql('INSERT IGNORE INTO ?? (??) VALUES ?', tableName, columns, values);
 }
+
+
+
+router.all('/migrate-snpedia', function(req, res, next) { 
+	var startTime = Date.now();
+	var sql = 'SELECT * FROM snpedia_snp2 LIMIT ' + (req.query.limit || '5');
+	return Promise.each(db.executeSql(sql), function(snpRow) {
+		snpRow.last_retrieved_date = snpRow.updated_date;
+		snpRow.full_text = snpRow.snpedia_page;
+		snpRow.categories = snpRow.snpedia_cats;
+		['23andme', 'snpedia', 'ancestry', 'snpedia_page', 'snpedia_cats'].forEach(x => delete snpRow[x]);
+
+		return db.transaction(function(trans) {
+			return trans.executeSql('INSERT INTO snpedia_snp SET ?', snpRow).then(function() {
+				trans.executeSql('DELETE FROM snpedia_snp2 WHERE rsid = ? LIMIT 1', snpRow.rsid);
+			});
+		}); 
+	}).then(function(inserts) {
+		var txt = 'ok! inserted: '+ inserts.length;
+		var elapsedTime = Date.now() - startTime;
+		txt += ' in ' + elapsedTime/1000 + ' seconds.';
+		txt += '<br><br>' + inserts.map(x => x.rsid).join('<br>');
+		txt += '<script>setTimeout(function() {location.reload();}, 2000);</script>';
+		res.send(txt);
+	}).catch(next);
+});
 
 module.exports = router;
