@@ -1,6 +1,14 @@
 var Promise	= require('bluebird');
 var db		= require('../lib/db');
 
+/**
+ * The DataCollection is a wrapper class for interfacing with a single DB table.
+ * It includes operations for basic CRUD actions.
+ * Retrieved records are returned as DataCollection.Entity objects.
+ * 
+ * @constructor
+ * @param {String} tableName	the name of the database table asociated with this class
+ */
 function DataCollection(tableName) {
 	var self = this;
 
@@ -73,6 +81,10 @@ function DataCollection(tableName) {
 	
 	this.Entity = Entity.prototype;
 
+	/**
+	 * The Entity class represents a single record from the DataCollection.  It is a wrapper class for the raw row data.
+	 * @constructor
+	 */
 	function Entity(rowData) {
 		
 		this._rowData = rowData;
