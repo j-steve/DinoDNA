@@ -52,7 +52,7 @@ function DataCollection(tableName) {
 	 */
 	this.getMany = function(where) {
 		const SQL = 'SELECT * FROM ?? WHERE ?';
-		return db.executeSql(SQL, tableName, where).then(rows => rows && rows.map(x => new Entity(x)));
+		return db.executeSql(SQL, tableName, where).tap(entityInit).then(rows => rows && rows.map(x => new Entity(x)));
 	};
 	
 	/**
@@ -111,21 +111,28 @@ function DataCollection(tableName) {
 		};
 	}
 	
-	// Add each row field as a property to the object.
-	Promise.each(getFields, function(field) {
-		Object.defineProperty(Entity.prototype, field, {
-			get: function() {return this._rowData[field];},
-			set: function(val) {return (this._rowData[field] = val);}
-		});
-	});
-
-	// Add the special "_id" property.
-	getIdField.then(function(idField) {
-		Object.defineProperty(Entity.prototype, '_id', {
-			get: function() {return this._rowData[idField];},
-			set: function(val) {return (this._rowData[idField] = val);}
-		});
-	});
+	/**
+	 * A promise that awaits the initial table metadata query, then sets Entity's database properties.<br>
+	 * This promise should be awaited before returning any instantiated DataCollection.Entity objects,
+	 * otherwise their DB property fields may not have been initialized yet.
+	 * @type {Promise}
+	 */
+	var entityInit = Promise.join(
+			// Add each row field as a property to the object.
+			Promise.each(getFields, function(field) { 
+				Object.defineProperty(Entity.prototype, field, {
+					get: function() {return this._rowData[field];},
+					set: function(val) {return (this._rowData[field] = val);}
+				});
+			}),
+			// Add the special "_id" property.
+			getIdField.then(function(idField) {
+				Object.defineProperty(Entity.prototype, '_id', {
+					get: function() {return this._rowData[idField];},
+					set: function(val) {return (this._rowData[idField] = val);}
+				});
+			})
+	);
 }
 
 module.exports = DataCollection;
