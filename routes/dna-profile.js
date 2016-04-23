@@ -14,6 +14,7 @@ router.get('/', function(req, res, next) {
 /* GET home page. */
 router.get('/', function(req, res, next) {
 	console.log('Getting SNP count for DNA profile id: ' + res.locals.dnaProfile.id);
+	console.log('dna prof:', res.locals.dnaProfile);
 	Promise.props({
 	    snpCount: res.locals.dnaProfile.snpCount(),
 	    dnaProfiles: res.locals.user.getDnaProfiles()
