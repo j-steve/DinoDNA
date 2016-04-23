@@ -6,7 +6,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var busboy = require('connect-busboy');
 var lessMiddleware = require('less-middleware');
-var mongoose = require('mongoose');
 
 var app = express();
 
@@ -27,14 +26,6 @@ app.use(busboy());
 app.use(lessMiddleware(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
-
-// Establish DB connection and load DB Models.
-var DB_CONN = 'mongodb://heroku_tfldttfx:15vsse4tjgecu51hr47gtg6v36@ds047335.mlab.com:47335/heroku_tfldttfx';
-mongoose.connect(DB_CONN, {
-	promiseLibrary : require('bluebird')
-});
-mongoose.connection.on('error', console.error
-		.bind(console, 'connection error:'));
 
 // Setup routing for public pages.
 app.use('/', require('./routes/landing'));

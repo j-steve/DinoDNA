@@ -1,5 +1,6 @@
 {
 	"maxerr": 50,
 	"esnext": true,
-	"predef": [ "-Promise" ]
+	"predef": [ "-Promise" ],
+	"eqnull": true
 }

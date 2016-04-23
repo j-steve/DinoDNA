@@ -15,7 +15,6 @@
     "morgan": "1.7.x",
     "serve-favicon": "2.3.x",
 	"connect-busboy": "0.0.x",
-	"mongoose": "4.4.x",
 	"bluebird": "3.3.x",
 	"bcrypt-nodejs" : "latest",
 	"request": "2.69.x",

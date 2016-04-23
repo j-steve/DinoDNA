@@ -190,4 +190,55 @@ router.all('/migrate-snpedia', function(req, res, next) {
 	}).catch(next);
 });
 
+
+router.get('/view-snps', function(req, res, next) {  
+	var sql = 'SELECT * FROM dna_profile_snp join snpedia_snp using (rsid) where dna_profile_id  = 5 LIMIT ' + (req.query.limit || '10');
+	db.executeSql(sql).then(function(snpRows) {
+		var rows = snpRows.map(x => '<h1>' + x.rsid + '</h1>' + x.full_text);
+		res.send(rows.join('<br><hr style="clear:both;"><br>'));
+	}).catch(next);
+});
+
+var GENOME_REGEX = />Reference<\/td><td><[^>]+>(\w+)<\/a>([^<]+)<\/td>/;
+var CHROMOSOME_REGEX = />Chromosome<\/td><td>([^<]+)<\/td>/;
+var POSITION_REGEX = />Position<\/td><td>([^<]+)<\/td>/;
+var ORIENTATION_REGEX = />Orientation<\/a><\/td><td>([^<]+)<\/td>/;
+
+router.get('/parse-snps', function(req, res, next) {
+	var startTime = Date.now();
+	var sql = 'SELECT * FROM snpedia_snp left join snp using (rsid) where snp.rsid is null LIMIT ' + (req.query.limit || '100');
+	return Promise.each(db.executeSql(sql), function(snpRow) {
+		var genomeMatches = GENOME_REGEX.exec(snpRow.full_text);
+		var chromosomeMatches = CHROMOSOME_REGEX.exec(snpRow.full_text);
+		var positionMatches = POSITION_REGEX.exec(snpRow.full_text);
+		var orientationMatches = ORIENTATION_REGEX.exec(snpRow.full_text);
+		snp = {
+				rsid: snpRow.rsid,
+				genome_version: genomeMatches && genomeMatches[1] + genomeMatches[2],
+				chromosome: chromosomeMatches && chromosomeMatches[1],
+				position: positionMatches && positionMatches[1],
+				is_reversed : orientationMatches && toBoolean(orientationMatches[1], 'minus', 'plus')
+		};
+		return db.executeSql('INSERT INTO `snp` SET ?', snp).catch(err => console.error(err));
+	}).then(function(inserts) {
+		var txt = 'ok! inserted: '+ inserts.length;
+		var elapsedTime = Date.now() - startTime;
+		txt += ' in ' + elapsedTime/1000 + ' seconds.';
+		txt += '<br><br>' + inserts.map(x => x.rsid).join('<br>');
+		txt += '<script>setTimeout(function() {location.reload();}, 2000);</script>';
+		res.send(txt);
+	}).catch(next);
+});
+
+function toBoolean(value, positive, negative, allowNonMatch) {
+	switch (value) {
+		case positive: return true;
+		case negative: return false;
+		default: if (allowNonMatch) {return null;}
+	}
+	throw new Error("Invalid value, expected " + positive + " or " + negative + ", actual value was \"" + value + "\".");
+}
+
+
+
 module.exports = router;
