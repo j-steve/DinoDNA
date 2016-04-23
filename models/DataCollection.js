@@ -6,14 +6,29 @@ var db		= require('../lib/db');
  * It includes operations for basic CRUD actions.
  * Retrieved records are returned as DataCollection.Entity objects.
  * 
- * @constructor
+ * @class
  * @param {String} tableName	the name of the database table asociated with this class
  */
 function DataCollection(tableName) {
 	var self = this;
 
+	/**
+	 * The main table metadata query, used to populate the list of columns from the specified table
+	 * without requiring those column names to be specified in the code.
+	 * @type {Promise<Array<mysql.Field>>
+	 */
 	var getMetadata = db.executeSql('SHOW COLUMNS FROM ??', tableName);
+	
+	/**
+	 * A metadata query indicating the name of the table's primary key field.
+	 * @type {Promise<String>}
+	 */
 	var getIdField = getMetadata.then(cols => cols.find(x => x.Key === 'PRI').Field);
+	
+	/**
+	 * A metadata query indicating the field names of this table.
+	 * @type {Promise<Array<String>>}
+	 */
 	var getFields = getMetadata.then(cols => cols.map(x => x.Field));
 
 	/**
@@ -83,16 +98,32 @@ function DataCollection(tableName) {
 
 	/**
 	 * The Entity class represents a single record from the DataCollection.  It is a wrapper class for the raw row data.
-	 * @constructor
+	 * 
+	 * @class
+	 * @param {Object} rowData		a list of key-value pairs retrieved from the database 
 	 */
 	function Entity(rowData) {
 		
+		/** @private */
 		this._rowData = rowData;
 
+		/**
+		 * Saves this record to the database, invoking either {@link #insert()} or {@link #update()},
+		 * based on whether this record is new or existing (determined by the existence of its "id" field).
+		 * 
+		 * @returns {Promise}
+		 */
 		this.save = function() {
 			return self._id ? self.update() : self.insert();
 		};
 
+		/**
+		 * Inserts this new record into the database.<br>
+		 * Throws an error if its primary key field {@link #_id} has already been set, 
+		 * which would indicate that this record has already been inserted.
+		 * 
+		 * @returns {Promise<mysql.Insert>}
+		 */
 		this.insert = function() {
 			if (self._id) {return Promise.reject('Cannot insert: ID already exists, value="' + self._id + '".');}
 			const SQL = 'INSERT INTO ?? SET ?';
@@ -102,6 +133,13 @@ function DataCollection(tableName) {
 			});
 		};
 
+		/**
+		 * Updates the values of this record in the database.<br>
+		 * Throws an error if its primary key field {@link #_id} has not yet been set, 
+		 * which would indicate that this record has not been inserted.
+		 * 
+		 * @returns {Promise<mysql.Update>}
+		 */
 		this.update = function() {
 			if (!self._id) {return Promise.reject('Cannot update: ID is null.');}
 			const SQL = 'UPDATE ?? SET ? WHERE ?';
