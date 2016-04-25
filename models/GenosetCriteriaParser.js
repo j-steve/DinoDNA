@@ -4,12 +4,12 @@ var DnaProfileSnp	= require('./DnaProfileSnp');
 
 var snpCriteria = function(args, rsid, dnaProfileId) {
 	var isMatch = true;
-	DnaProfileSnp.getByNk(dnaProfileId, rsid).getAlleles().forEach(function(allele) {
+	var alleles = DnaProfileSnp.getByNk(dnaProfileId, rsid).call('getAlleles');
+	return alleles.each(function(allele) {
 		var index = alleles.indexOf(searchAllele);
 		 // If one or more alleles are undefined, cannot answer definitively so return null.
 		if (index === -1) {isMatch = alleles.includes('0') ? null : false;}
-	});
-	return isMatch;
+	}).return(isMatch);
 };
 
 var classTypes = {
@@ -17,7 +17,7 @@ var classTypes = {
 		'I': snpCriteria,
 		'i': snpCriteria,
 		'gs': function(args, genosetName, dnaProfileId) {
-			return GenosetCriteria.getById(genosetName).test(dnaProfileId);
+			return GenosetCriteria.getById(genosetName).call(test, dnaProfileId);
 		},
 		'not': args => args.every(x => x === false), // x may be null, indicating no data; don't include this.
 		'and': args => args.every(x => x),

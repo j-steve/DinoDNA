@@ -3,11 +3,11 @@ var Promise				= require('bluebird');
 var GenosetCriteria		= require('../../models/GenosetCriteria');
 
 router.get('/', function(req, res, next) {
-	Promise.all(GenosetCriteria.getAll(), function(genoset) {
-		return genoset.name;
+	Promise.filter(GenosetCriteria.getAll(), function(genoset) {
+		return genoset.test(res.locals.dnaProfile.id);
 	}).then(function(results) {
-		console.log(results);
-		res.send(results);
+		var gsIds = results.map(x => x.name);
+		res.send(gsIds);
 	}).catch(next);
 });
 

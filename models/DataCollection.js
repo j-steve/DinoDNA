@@ -66,7 +66,7 @@ function DataCollection(tableName) {
 	 * @returns {Promise<Array<Entity>>}
 	 */
 	this.getMany = function(where) {
-		const SQL = 'SELECT * FROM ?? WHERE ?';
+		const SQL = 'SELECT * FROM ?? WHERE ???';
 		return db.executeSql(SQL, tableName, where).tap(entityInit).then(rows => rows && rows.map(x => new Entity(x)));
 	};
 
@@ -88,7 +88,7 @@ function DataCollection(tableName) {
 	 */
 	this.count = function(where) {
 		const COUNT = 'COUNT(*)';
-		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ?? WHERE ?';
+		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ?? WHERE ???';
 		return db.executeSql(SQL, COUNT, tableName, where).then(x => x[0][COUNT]);
 	};
 	
@@ -152,7 +152,7 @@ function DataCollection(tableName) {
 		 */
 		this.update = function() {
 			if (!self._id) {return Promise.reject('Cannot update: ID is null.');}
-			const SQL = 'UPDATE ?? SET ? WHERE ?';
+			const SQL = 'UPDATE ?? SET ? WHERE ???';
 			return db.executeSql(SQL, tableName, self._rowData, {id: self._id}).then(function(result) {
 				return self;
 			});
