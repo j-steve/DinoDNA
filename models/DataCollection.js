@@ -113,7 +113,13 @@ function DataCollection(tableName) {
 	 * @param {Object} rowData		a list of key-value pairs retrieved from the database 
 	 */
 	function Entity(rowData) {
-		
+
+		// Fix BUFFER issue with bit fields.
+		Object.keys(rowData).forEach(function(field) {
+			if (rowData[field] && rowData[field].constructor.name === 'Buffer') {
+				rowData[field] = rowData[field][0];
+			}
+		});
 		/** @private */
 		this._rowData = rowData;
 

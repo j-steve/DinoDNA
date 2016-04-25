@@ -2,14 +2,27 @@ var Assert			= require('../lib/Assert');
 var GenosetCriteria	= require('./GenosetCriteria');
 var DnaProfileSnp	= require('./DnaProfileSnp');
 
-var snpCriteria = function(args, rsid, dnaProfileId) {
-	var isMatch = true;
-	var alleles = DnaProfileSnp.getByNk(dnaProfileId, rsid).call('getAlleles');
-	return alleles.each(function(allele) {
-		var index = alleles.indexOf(searchAllele);
-		 // If one or more alleles are undefined, cannot answer definitively so return null.
-		if (index === -1) {isMatch = alleles.includes('0') ? null : false;}
-	}).return(isMatch);
+var snpCriteria = function(searchAlleles, rsid, dnaProfileId) {
+	console.log('evalin', rsid, 'searchin for', searchAlleles);
+	searchAlleles = searchAlleles.map(x => x === '-' ? '0' : x); // replace "-" with "0".
+	if (!searchAlleles.every(x => ['A', 'T', 'C', 'G', '0'].indexOf(x) !== -1)) {
+		throw new Error('SNP genoset criteria for ' + rsid + ' contains invalid alleles: [' + searchAlleles.join(', ') + '].');
+	}
+	var containsUnknowns = false;
+	return DnaProfileSnp.getByNk(dnaProfileId, rsid).then(function(dnaProfSnp) {
+		if (dnaProfSnp === null) {return null;}
+		return dnaProfSnp.getAlleles().each(function(allele) {
+			var index = searchAlleles.indexOf(allele);
+			if (index !== -1) {
+				searchAlleles.splice(index, 1);
+			} else if (allele === '0') {
+				containsUnknowns = null; // return NULL vs FALSE to indicate that the value is unknown, not explicitly untrue.
+			}
+		}).then(function() {
+			console.log('remainin alleles:', searchAlleles, 'so returnin', !searchAlleles.length || containsUnknowns);
+			return !searchAlleles.length || containsUnknowns;
+		});
+	});
 };
 
 var classTypes = {
@@ -19,9 +32,13 @@ var classTypes = {
 		'gs': function(args, genosetName, dnaProfileId) {
 			return GenosetCriteria.getById(genosetName).call(test, dnaProfileId);
 		},
-		'not': args => args.every(x => x === false), // x may be null, indicating no data; don't include this.
-		'and': args => args.every(x => x),
-		'or': args => args.find(x => x)
+		'not': args => Promise.all(args).then(a => a.every(x => x === false)), // x may be null, indicating no data; don't include this.
+		'and': args => Promise.all(args).then(a => a.every(x => x)),
+		'or': args => Promise.all(args).then(a => a.some(x => x)),
+		'atleast': function(args) {
+			var minCount = args.shift();
+			return Promise.all(args).then(a => a.filter(x => x).length >= minCount);
+		}
 };
 
 function parse(input, dnaProfileId) {

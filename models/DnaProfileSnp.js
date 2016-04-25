@@ -16,9 +16,10 @@ DnaProfileSnp.Entity.getSnp = function() {
 };
 
 DnaProfileSnp.Entity.getAlleles = function() {
-	return dnaProfileSnp.getSnp().prop('is_reversed').then(function(isReversed) {
-		var alleles = [this.allele1, this.allele2];
-		if (isReversed) {
+	var self = this;
+	return this.getSnp().then(function(snp) {
+		var alleles = [self.allele1, self.allele2];
+		if (snp.is_reversed) {
 			alleles = alleles.map(function(allele) {
 				switch (allele) {
 					case 'A': return 'T';
@@ -27,6 +28,8 @@ DnaProfileSnp.Entity.getAlleles = function() {
 					case 'G': return 'C';
 				}
 			});
+		} else if (snp.is_reversed === null) {
+			console.warn('Missing isReversed data for', self.rsid);
 		}
 		return alleles;
 	});
