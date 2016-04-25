@@ -3,18 +3,9 @@ var DnaProfile = require('../models/DnaProfile');
 var DnaProfileSnp = require('../models/DnaProfileSnp');
 var Promise = require('bluebird');
 
-//Populate the DNA Profile value on all requests.
-router.get('/', function(req, res, next) {
-	DnaProfile.getById(req.query.profile).then(function(dnaProfile) {
-		res.locals.dnaProfile = dnaProfile;
-		next();
-	}).catch(next);
-});
-
 /* GET home page. */
 router.get('/', function(req, res, next) {
 	console.log('Getting SNP count for DNA profile id: ' + res.locals.dnaProfile.id);
-	console.log('dna prof:', res.locals.dnaProfile);
 	Promise.props({
 	    snpCount: res.locals.dnaProfile.snpCount(),
 	    dnaProfiles: res.locals.user.getDnaProfiles()

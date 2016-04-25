@@ -7,14 +7,6 @@ var DnaProfileSnp	= require('../models/DnaProfileSnp');
 
 var COLUMN_NAMES = ['rsid', 'chromosome', 'position', 'allele1', 'allele2', 'dna_profile_id'];
 
-// Populate the DNA Profile value on all requests.
-router.all('/', function(req, res, next) {
-	DnaProfile.getById(req.query.profile).then(function(dnaProfile) {
-		res.locals.dnaProfile = dnaProfile;
-		next();
-	}).catch(next);
-});
-
 /* File Upload GET */
 router.get('/', function(req, res, next) {
 	DnaProfile.getById(req.query.profile).then(function(dnaProfile) {
@@ -76,19 +68,6 @@ router.post('/', function(req, res, next) {
 			}).catch(console.error);
 		});
 	}
-
-	/**
-	 * Converts a Stream into a Promise.
-	 *
-	 * @param {Stream} stream
-	 * @return {Promise}
-	 */
-	/*function streamToPromise(stream) {
-	    return new Promise(function(resolve, reject) {
-	        stream.on("end", resolve);
-	        stream.on("error", reject);
-	    });
-	}*/
 });
 
 module.exports = router;

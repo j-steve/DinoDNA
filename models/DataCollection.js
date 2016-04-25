@@ -23,7 +23,7 @@ function DataCollection(tableName) {
 	 * A metadata query indicating the name of the table's primary key field.
 	 * @type {Promise<String>}
 	 */
-	var getIdField = getMetadata.then(cols => cols.find(x => x.Key === 'PRI').Field);
+	var getIdField = getMetadata.then(cols => (cols.find(x => x.Key === 'PRI') || cols[0]).Field);
 	
 	/**
 	 * A metadata query indicating the field names of this table.
@@ -68,6 +68,16 @@ function DataCollection(tableName) {
 	this.getMany = function(where) {
 		const SQL = 'SELECT * FROM ?? WHERE ?';
 		return db.executeSql(SQL, tableName, where).tap(entityInit).then(rows => rows && rows.map(x => new Entity(x)));
+	};
+
+	/**
+	 * Returns all records from the table.
+	 *  
+	 * @returns {Promise<Array<Entity>>}
+	 */
+	this.getAll = function() {
+		const SQL = 'SELECT * FROM ??';
+		return db.executeSql(SQL, tableName).tap(entityInit).then(rows => rows && rows.map(x => new Entity(x)));
 	};
 	
 	/**

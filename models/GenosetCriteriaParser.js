@@ -1,28 +1,41 @@
-var Assert = require('../Assert');
+var Assert			= require('../lib/Assert');
+var GenosetCriteria	= require('./GenosetCriteria');
+var DnaProfileSnp	= require('./DnaProfileSnp');
 
-var classTypes = {};
-
-exports.addCriteriaType = function(CriteriaClass, prefix) {
-	Assert.validType(CriteriaClass, 'function', 'CriteriaClass');
-	Assert.validType(prefix, 'string', 'prefix');
-	classTypes[prefix] = CriteriaClass;
+var snpCriteria = function(args, rsid, dnaProfileId) {
+	var isMatch = true;
+	DnaProfileSnp.getByNk(dnaProfileId, rsid).getAlleles().forEach(function(allele) {
+		var index = alleles.indexOf(searchAllele);
+		 // If one or more alleles are undefined, cannot answer definitively so return null.
+		if (index === -1) {isMatch = alleles.includes('0') ? null : false;}
+	});
+	return isMatch;
 };
 
-exports.parse = function(input) {
-	input = input.replace(/#.+/g, '').replace(/\s/g, '').replace(/;/g, ',');
-	return parseFormatted(input);
+var classTypes = {
+		'rs': snpCriteria,
+		'I': snpCriteria,
+		'i': snpCriteria,
+		'gs': function(args, genosetName, dnaProfileId) {
+			return GenosetCriteria.getById(genosetName).test(dnaProfileId);
+		},
+		'not': args => args.every(x => x === false), // x may be null, indicating no data; don't include this.
+		'and': args => args.every(x => x),
+		'or': args => args.find(x => x)
 };
 
-function parseFormatted(input) {
+function parse(input, dnaProfileId) {
 	var argStart = input.indexOf('(');
 	if (argStart == -1) {
 		return input;
 	} else {
 		var criteria = input.substring(0, argStart);
-		var args = splitArgs(input, argStart + 1, input.length - 1).map(parseFormatted);
-		var prefix = Object.keys(BaseCriteria.classTypes).find(x => criteria.startsWith(x));
+		var prefix = Object.keys(classTypes).find(x => criteria.startsWith(x));
 		if (!prefix) {throw new Error('Unknown criteria type: "' + criteria + '".');}
-		return new BaseCriteria[prefix](args);
+
+		var args = splitArgs(input, argStart + 1, input.length - 1);
+		var parsedArgs = args.map(x => parse(x, dnaProfileId));
+		return classTypes[prefix](parsedArgs, criteria, dnaProfileId);
 	}
 }
 
@@ -33,7 +46,7 @@ function splitArgs(input, argStart, argEnd) {
 		var chr = input[i];
 		if (i === argEnd || chr === ',' && !parenStack) {
 			var arg = input.substring(argStart, i);
-			argStack.push(arg);
+			if (arg) {argStack.push(arg);}
 			argStart = i + 1;
 		} else if (chr === '(') {
 			parenStack++;
@@ -43,3 +56,6 @@ function splitArgs(input, argStart, argEnd) {
 	}
 	return argStack;
 }
+
+
+module.exports = parse;

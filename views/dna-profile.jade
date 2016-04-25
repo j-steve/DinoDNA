@@ -12,4 +12,6 @@ append content
 			each otherProfile in otherDnaProfiles
 				option(label=otherProfile.name, value=otherProfile.id)
 		input(type="submit" value="run comparison report")
-		
+	form(action="report/genosets")
+		input(type="hidden" name="profile" value=dnaProfile.id)
+		input(type="submit" value="run genoset report")

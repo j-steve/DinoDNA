@@ -35,6 +35,17 @@ app.use('/logout', require('./routes/logout'));
 // Setup routing for admin pages
 app.use('/admin', require('./routes/admin'));
 
+// Process DNA profile ID on all requests where the 'profile' querystring is set.
+app.use(function(req, res, next) {
+	if (req.query && req.query.profile) {
+		var DnaProfile = require('./models/DnaProfile');
+		DnaProfile.getById(req.query.profile).then(function(dnaProfile) {
+			res.locals.dnaProfile = dnaProfile;
+			next();
+		}).catch(next);
+	} else {next();}
+});
+
 // Setup routing for authenticated pages.
 app.use(require('./lib/auth'));
 app.use('/start', require('./routes/start'));
@@ -44,6 +55,7 @@ app.use('/dna-upload', require('./routes/dna-upload'));
 app.use('/dna-profile', require('./routes/dna-profile'));
 
 app.use('/report/compare', require('./routes/report/compare'));
+app.use('/report/genosets', require('./routes/report/genoset'));
 
 // Catch 404 and forward to error handler.
 app.use(function(req, res, next) {
