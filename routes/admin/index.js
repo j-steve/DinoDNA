@@ -4,6 +4,7 @@ var Promise	= require('bluebird');
 var db 		= require('../../lib/db');
 var web 	= require('../../lib/web');
 var text 	= require('../../lib/text');
+var Logger 	= require('../../lib/Logger');
 
 //var SNPEDIA_URL = 'http://bots.snpedia.com/api.php?action=askargs&conditions=Category:Is%20a%20genotype&printouts=magnitude|'
 //var SNPEDIA_URL = http://bots.snpedia.com/api.php?format=json&action=ask&query=[[Category:Is%20a%20genotype]]|?magnitude|?Summary|sort=magnitude|order=desc|limit=100|offset=';
@@ -191,8 +192,11 @@ router.all('/migrate-snpedia', function(req, res, next) {
 });
 
 
-router.get('/view-snps', function(req, res, next) {  
-	var sql = 'SELECT * FROM dna_profile_snp join snpedia_snp using (rsid) where dna_profile_id  = 5 LIMIT ' + (req.query.limit || '10');
+router.get('/view-snps', function(req, res, next) {
+	var sql = "SELECT * FROM snpedia_snp WHERE full_text like '%/index.php/Rs%' LIMIT " + (req.query.limit || '10');
+	//var sql = db.format('SELECT * FROM snpedia_snp WHERE ???', [{rsid:req.query.rsid}]);
+	//var sql = 'SELECT * FROM snpedia_snp WHERE categories LIKE \'%Has_genotype%\' LIMIT ' + (req.query.limit || '10')  + ' OFFSET ' + Math.floor(Math.random() * 10000);
+	//var sql = 'SELECT * FROM snpedia_snp LIMIT ' + (req.query.limit || '10')  + ' OFFSET ' + Math.floor(Math.random() * 10000);
 	db.executeSql(sql).then(function(snpRows) {
 		var rows = snpRows.map(x => '<h1>' + x.rsid + '</h1>' + x.full_text);
 		res.send(rows.join('<br><hr style="clear:both;"><br>'));
@@ -238,6 +242,53 @@ function toBoolean(value, positive, negative, allowNonMatch) {
 	}
 	throw new Error("Invalid value, expected " + positive + " or " + negative + ", actual value was \"" + value + "\".");
 }
+
+
+const SNP_ALLELE_PATT = 'href="\\/index\\.php\\/((?:Rs|I)\\w+)\\((\\w+);(\\w+)\\)"[^>]*?>\\(\\2;\\3\\)[\\s\\S]+?<td[^>]*>\\s*([0-9.]+)?\\s*<\\/td>\\s*<td>\\s*([^<]+?)?\\s*<\\/td>';
+
+router.get('/parse-snps2', function(req, res, next) {	
+	var startTime = Date.now();
+	var sql ="SELECT * FROM snpedia_snp WHERE full_text like '%/index.php/Rs%' AND status_code IS NULL LIMIT " + (req.query.limit || '10');
+	var nomatches = '';
+	var inserts = [];
+	return Promise.each(db.executeSql(sql), function(snpRow) {
+		var regex = new RegExp(SNP_ALLELE_PATT, 'ig');
+		var promises = [];
+		var alleleMatches;
+		while ((alleleMatches = regex.exec(snpRow.full_text))) {
+			var snp_allele = {
+				rsid: alleleMatches[1],
+				allele1: alleleMatches[2],
+				allele2: alleleMatches[3],
+				magnitude: alleleMatches[4],
+				message: alleleMatches[5],
+			};
+			if (text.notEqual(snpRow.rsid, snp_allele.rsid)) {
+				Logger.warn('rsid mismatch: "{0}" vs "{1}" in capture group:\n{2}', snpRow.rsid, snp_allele.rsid, alleleMatches[0]);
+				inserts.push(text.format('   rsid mismatch: "{0}" vs "{1}"', snpRow.rsid, snp_allele.rsid));
+				nomatches += '<hr>' + snpRow.full_text;
+			} else {
+				inserts.push(snp_allele.rsid + '(' + snp_allele.allele1 + ';' + snp_allele.allele2 + ')');
+				var promise = db.executeSql('INSERT INTO `snp_allele` SET ?', snp_allele);
+				promises.push(promise);
+			}
+		}
+		if (!promises.length) {Logger.info('No regex matches for {0}', snpRow.rsid); nomatches += '<hr>' + snpRow.full_text;}
+		return Promise.all(promises).then(function() {
+			return db.executeSql("UPDATE `snpedia_snp` SET  status_code = '5' where rsid = ?", snpRow.rsid);
+		});
+		
+	}).then(function() {
+		var txt = 'ok! inserted: '+ inserts.length;
+		var elapsedTime = Date.now() - startTime;
+		txt += ' in ' + elapsedTime/1000 + ' seconds.';
+		txt += '<br><br>' + inserts.join('<br>');
+		txt += nomatches;
+		//txt += '<script>setTimeout(function() {location.reload();}, 2000);</script>';
+		res.send(txt);
+	}).catch(next);
+});
+
 
 
 
