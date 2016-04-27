@@ -268,7 +268,7 @@ router.get('/parse-snps2', function(req, res, next) {
 				inserts.push(text.format('   rsid mismatch: "{0}" vs "{1}"', snpRow.rsid, snp_allele.rsid));
 				nomatches += '<hr>' + snpRow.full_text;
 			} else {
-				inserts.push(snp_allele.rsid + '(' + snp_allele.allele1 + ';' + snp_allele.allele2 + ')');
+				inserts.push(snp_allele.rsid + '(' + snp_allele.allele1 + ';' + snp_allele.allele2 + ') - ' + snp_allele.message);
 				var promise = db.executeSql('INSERT INTO `snp_allele` SET ?', snp_allele);
 				promises.push(promise);
 			}
@@ -284,7 +284,7 @@ router.get('/parse-snps2', function(req, res, next) {
 		txt += ' in ' + elapsedTime/1000 + ' seconds.';
 		txt += '<br><br>' + inserts.join('<br>');
 		txt += nomatches;
-		//txt += '<script>setTimeout(function() {location.reload();}, 2000);</script>';
+		txt += '<script>setTimeout(function() {location.reload();}, 2000);</script>';
 		res.send(txt);
 	}).catch(next);
 });
