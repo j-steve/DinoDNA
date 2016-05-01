@@ -1,7 +1,41 @@
 extends layout
 
+append style
+	style.
+		details {
+			background:rgb(255, 231, 231);
+			margin-bottom:5px;
+			width:50%;
+			border:1px solid silver;
+		}
+		details summary {
+			cursor:pointer;
+			font-size:17px;
+			margin-bottom:5px;
+		}
+		.functionName {
+			font-weight:bold;
+			background:white;
+			margin:5px 15px;
+		}
+		.code {
+			background:white;
+			margin:5px 15px;
+		}
+
 append content
-  h1(style="color:red;")= "Error!"
-  h2= message
-  h3= error.status
-  pre #{error.stack}
+	h1
+		span(style="color:red;")="Error!"
+		span(style="margin-left:10px; font-size:90%;")=message
+	each snippet in codeSnippets 
+		details(style="margin-left:15px;", open=!snippet.isLib)
+			summary #{snippet.fileName}: ##{snippet.lineNo}
+			if snippet.functionName
+				pre.functionName
+					|#{snippet.functionName}() 
+			pre.code
+				|#{snippet.lineNo-1 + snippet.lines[snippet.lineNo-1] + '\n'}
+				span(style="background:rgb(255, 255, 180);") #{snippet.lineNo + snippet.lines[snippet.lineNo] + '\n'}
+				|#{snippet.lineNo+1 + snippet.lines[snippet.lineNo+1] + '\n'}
+	h2="Stacktrace:"
+	pre #{error.stack}

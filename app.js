@@ -1,5 +1,5 @@
 require('./lib/polyfill.js');
-var express = require('express');
+var express 	= require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -7,6 +7,9 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var busboy = require('connect-busboy');
 var lessMiddleware = require('less-middleware');
+var fs 			= require('fs');
+var Logger 		= require('./lib/Logger');
+var File 		= require('./lib/File');
 
 var app = express();
 
@@ -66,12 +69,28 @@ app.use(function(req, res, next) {
 });
 
 // Handle Errors.
+const errLine = /at (?:([^(\/\\]+) \()?(.+):(\d+):(\d+)(?:\))?/g;
 app.use(function(err, req, res, next) {
-	console.error('ERROR:', err);
+	var match;
+	var codeSnippets = [];
+	while ((match = errLine.exec(err.stack))) {
+		var file = new File(match[2]);
+		var snippet = {
+			functionName: match[1],
+			filePath: file.path,
+			fileName: file.name,
+			lineNo: match[3] - 1,
+			isLib: file.path.contains('node_modules'),
+			lines: file.existsSync() ? file.readLinesSync() : []
+		};
+		codeSnippets.push(snippet);
+	}	
+	Logger.error('ERROR: {0}', err);
 	res.status(err.status || 500);
 	res.render('error', {
 		message : err.message || err,
-		error : app.get('env') === 'development' ? err : null
+		error : app.get('env') === 'development' ? err : null,
+		codeSnippets: codeSnippets
 	});
 });
 

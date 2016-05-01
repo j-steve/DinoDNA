@@ -67,7 +67,7 @@ function DataCollection(tableName) {
 	 */
 	this.getMany = function(where) {
 		const SQL = 'SELECT * FROM ?? WHERE ???';
-		return db.executeSql(SQL, tableName, where).tap(entityInit).then(rows => rows && rows.map(x => new Entity(x)));
+		return db.executeSql(SQL, tableName, where).then(self._asEntity);
 	};
 
 	/**
@@ -77,7 +77,7 @@ function DataCollection(tableName) {
 	 */
 	this.getAll = function() {
 		const SQL = 'SELECT * FROM ??';
-		return db.executeSql(SQL, tableName).tap(entityInit).then(rows => rows && rows.map(x => new Entity(x)));
+		return db.executeSql(SQL, tableName).then(self._asEntity);
 	};
 	
 	/**
@@ -89,7 +89,7 @@ function DataCollection(tableName) {
 	this.count = function(where) {
 		const COUNT = 'COUNT(*)';
 		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ?? WHERE ???';
-		return db.executeSql(SQL, COUNT, tableName, where).then(x => x[0][COUNT]);
+		return db.executeSql(SQL, COUNT, tableName, where).then(self._asEntity);
 	};
 	
 	/**
@@ -101,6 +101,12 @@ function DataCollection(tableName) {
 		if (!values || !values.length) {return Promise.resolve(null);}
 		var columns = Object.keys(values[0]);
 		return db.executeSql('INSERT INTO ?? (??) VALUES ?', tableName, columns, values);
+	};
+	
+	this._asEntity = function(dbRows) {
+		return entityInit.then(function() {
+			return dbRows && dbRows.map(x => new Entity(x));
+		});
 	};
 	
 	

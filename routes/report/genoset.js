@@ -1,16 +1,15 @@
 var router				= require('express').Router();
 var Promise				= require('bluebird');
+var Logger				= require('../../lib/Logger');
 var GenosetCriteria		= require('../../models/GenosetCriteria');
 
 router.get('/', function(req, res, next) {
-	//Promise.filter(GenosetCriteria.getMany("name LIKE 'fake%'"), function(genoset) {
 	Promise.filter(GenosetCriteria.getAll(), function(genoset) {
-		var isMatch = genoset.test(res.locals.dnaProfile.id);
-		isMatch.then(x => console.log('IS ' + genoset.name + ' A MATCH?', x));
-		return isMatch;
+		return genoset.test(res.locals.dnaProfile.id);
 	}).then(function(results) {
-		var gsIds = results.map(x => x.name);
-		res.send(gsIds);
+		res.locals.pageTitle = 'Genoset Report for ' + res.locals.dnaProfile.name;
+		results.sort((a, b) => b.magnitude - a.magnitude);
+		res.render('report/genoset', {genosets: results});
 	}).catch(next);
 });
 

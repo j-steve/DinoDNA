@@ -1,0 +1,16 @@
+extends ../user-layout
+
+
+append content
+	table
+		tr
+			th="Name"
+			th(title="Magnitude")="Mag."
+			th="Repute"
+			th="Summary"
+		for gs in genosets
+			tr
+				td #{gs.name}
+				td #{gs.magnitude}
+				td #{gs.repute}
+				td #{gs.summary}

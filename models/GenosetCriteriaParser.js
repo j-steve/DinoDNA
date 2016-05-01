@@ -1,12 +1,13 @@
 var Assert			= require('../lib/Assert');
+var Logger			= require('../lib/Logger');
+var text			= require('../lib/text');
 var GenosetCriteria	= require('./GenosetCriteria');
 var DnaProfileSnp	= require('./DnaProfileSnp');
 
 var snpCriteria = function(searchAlleles, rsid, dnaProfileId) {
-	console.log('evalin', rsid, 'searchin for', searchAlleles);
 	searchAlleles = searchAlleles.map(x => x === '-' ? '0' : x); // replace "-" with "0".
 	if (!searchAlleles.every(x => ['A', 'T', 'C', 'G', '0'].indexOf(x) !== -1)) {
-		throw new Error('SNP genoset criteria for ' + rsid + ' contains invalid alleles: [' + searchAlleles.join(', ') + '].');
+		Logger.warn('SNP genoset criteria for {0} contains invalid alleles: {1}', rsid, searchAlleles);
 	}
 	var containsUnknowns = false;
 	return DnaProfileSnp.getByNk(dnaProfileId, rsid).then(function(dnaProfSnp) {
@@ -19,7 +20,8 @@ var snpCriteria = function(searchAlleles, rsid, dnaProfileId) {
 				containsUnknowns = null; // return NULL vs FALSE to indicate that the value is unknown, not explicitly untrue.
 			}
 		}).then(function() {
-			console.log('remainin alleles:', searchAlleles, 'so returnin', !searchAlleles.length || containsUnknowns);
+			//Logger.log('Parsing SNP genoset criteria {0} for alleles {1} within dna profile id {2}:', rsid, searchAlleles, dnaProfileId);
+			//Logger.log('\tRemainig alleles are {0} so returning {1}.', searchAlleles, !searchAlleles.length || containsUnknowns);
 			return !searchAlleles.length || containsUnknowns;
 		});
 	});
@@ -27,7 +29,6 @@ var snpCriteria = function(searchAlleles, rsid, dnaProfileId) {
 
 var classTypes = {
 		'rs': snpCriteria,
-		'I': snpCriteria,
 		'i': snpCriteria,
 		'gs': function(args, genosetName, dnaProfileId) {
 			return GenosetCriteria.getById(genosetName).call(test, dnaProfileId);
@@ -47,12 +48,14 @@ function parse(input, dnaProfileId) {
 		return input;
 	} else {
 		var criteria = input.substring(0, argStart);
-		var prefix = Object.keys(classTypes).find(x => criteria.startsWith(x));
-		if (!prefix) {throw new Error('Unknown criteria type: "' + criteria + '".');}
+		var prefix = Object.keys(classTypes).find(x => criteria.toLowerCase().startsWith(x));
+		if (!prefix) {throw new Error(text.format('Unknown criteria type: "{0}" within input: "{1}".', criteria, input));}
 
 		var args = splitArgs(input, argStart + 1, input.length - 1);
 		var parsedArgs = args.map(x => parse(x, dnaProfileId));
-		return classTypes[prefix](parsedArgs, criteria, dnaProfileId);
+		var result = classTypes[prefix](parsedArgs, criteria, dnaProfileId);
+		result.then(isMatch => Logger.log('Checking genoset {0} for profile {1}: result it "{2}"', input, dnaProfileId, isMatch));
+		return result;
 	}
 }
 

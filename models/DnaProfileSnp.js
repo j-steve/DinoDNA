@@ -1,5 +1,6 @@
 var Promise			= require('bluebird');
 var DataCollection	= require('./DataCollection');
+var Logger			= require('../lib/Logger');
 var SNP				= require('./SNP');
 
 var DnaProfileSnp = new DataCollection('dna_profile_snp');
@@ -29,7 +30,7 @@ DnaProfileSnp.Entity.getAlleles = function() {
 				}
 			});
 		} else if (snp.is_reversed === null) {
-			console.warn('Missing isReversed data for', self.rsid);
+			Logger.warn('Missing isReversed data for "{0}".', self.rsid);
 		}
 		return alleles;
 	});
