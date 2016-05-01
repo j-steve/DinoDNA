@@ -11,7 +11,7 @@ var GenosetCriteria = new DataCollection('genoset');
 
 GenosetCriteria.getAll = function() {
 	const SQL = "SELECT * FROM genoset UNION " +
-			"SELECT -1, rsid, CONCAT(rsid, '(', allele1, ';', allele2, ')'), magnitude, NULL, message, created_at, updated_at " +
+			"SELECT -1, CONCAT(rsid, '(', allele1, ';', allele2, ')'), CONCAT(rsid, '(', allele1, ';', allele2, ')'), magnitude, NULL, message, created_at, updated_at " +
 			"FROM snp_allele WHERE rsid NOT LIKE 'I%'";
 	return db.executeSql(SQL).then(this._asEntity);
 };
