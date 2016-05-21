@@ -13,6 +13,7 @@ router.post('/', function(req, res, next) {
 		user_id : res.locals.user.id,
 		name : req.body.name
 	};
+	console.log('dna prof is', DnaProfile);
 	new DnaProfile(insertData).save().then(function(dnaProfile) {
 		console.log('Added dna profile: ' + dnaProfile.name);
 		res.redirect('dna-upload?profile=' + encodeURIComponent(dnaProfile.id));
