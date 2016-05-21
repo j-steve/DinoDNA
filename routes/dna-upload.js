@@ -2,8 +2,10 @@ var router			= require('express').Router();
 var Readline		= require('readline');
 var Promise			= require('bluebird');
 var db				= require('../lib/db');
+var Logger			= require('../lib/Logger');
 var DnaProfile		= require('../models/DnaProfile');
 var DnaProfileSnp	= require('../models/DnaProfileSnp');
+var DnaFileParser	= require('../models/DnaFileParser');
 
 var COLUMN_NAMES = ['rsid', 'chromosome', 'position', 'allele1', 'allele2', 'dna_profile_id'];
 
@@ -20,7 +22,7 @@ router.post('/', function(req, res, next) {
 		req.pipe(req.busboy);
 		req.busboy.on('file', processFile);
 	} catch (e) {
-		console.error(e);
+		Logger.error(e);
 		res.status(500).end("An error occured.");
 	}
 
@@ -48,24 +50,18 @@ router.post('/', function(req, res, next) {
 			}
 		});
 
-		var lineNo = 0;
-		lineReader.on('line', function(line) {
-			if (lineNo === -1) {return;}
-			lineNo++;
-			if (lineNo === 1 && line !== '#AncestryDNA raw data download') {
-				res.status(500).end('Invalid file: must be AncestryDNA file export.');
-				lineNo = -1;
-			} else if (lineNo > 17) { // skip comments and header
-				snps.push(line.split('\t').concat(res.locals.dnaProfile.id));
-			}
-		});
+		var dnaFileParser = new DnaFileParser(res.locals.dnaProfile.id);
+		
+		lineReader.on('line', line => snps.push(dnaFileParser.parseLine(line)));
 
 		lineReader.on('close', function() {
-			if (!res.finished) {res.sendStatus(200);}
+			if (dnaFileParser.isValidFile) {
+				res.sendStatus(200);
+			} else {
+				res.status(500).end('Invalid file: must be AncestryDNA or 23andMe file export.');
+			}
 
-			Promise.all(inserts).then(function() {
-				console.log('All uploads complete.');
-			}).catch(console.error);
+			Promise.all(inserts).then(x => console.log('All uploads complete.')).catch(Logger.error);
 		});
 	}
 });
