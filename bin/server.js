@@ -4,9 +4,10 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('DinoDNA:server');
-var http = require('http');
+var app			= require('../app');
+var debug		= require('debug')('DinoDNA:server');
+var http		= require('http');
+var Logger		= require('../lib/Logger');
 
 /**
  * Get port from environment and store in Express.
@@ -83,8 +84,9 @@ function onError(error) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
   debug('Listening on ' + bind);
+  
+  Logger.clearLog();
+  Logger.log('SERVER STARTED ({0})\n', bind);
 }
