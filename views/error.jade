@@ -35,7 +35,7 @@ append content
 		span(style="margin-left:10px; font-size:90%;")=message
 	each snippet in codeSnippets 
 		details(style="margin-left:15px;", open=!snippet.isLib)
-			summary #{snippet.fileName}
+			summary= snippet.filePath
 			if snippet.functionName
 				pre.functionName
 					|#{snippet.functionName}() 

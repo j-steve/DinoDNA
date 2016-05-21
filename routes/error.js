@@ -13,7 +13,7 @@ module.exports = function(err, req, res, next) {
 			var file = new File(match[2]);
 			var snippet = {
 				functionName: match[1],
-				filePath: file.path,
+				filePath: (file.path || '').substring(ROOT_PATH.length + 1),
 				fileName: file.name,
 				lineNo: +match[3],
 				isLib: false,
