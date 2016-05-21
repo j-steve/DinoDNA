@@ -41,10 +41,10 @@ append content
 					|#{snippet.functionName}() 
 			if snippet.lines
 				ol.code(start=snippet.lineNo-1)
-					li: pre #{snippet.lines[snippet.lineNo-1]}
+					li: pre #{snippet.lines[snippet.lineNo-2]}
 					li: pre #{snippet.beforeErr}
 						span.errorLine
 							|#{snippet.afterErr}
-					li: pre #{snippet.lines[snippet.lineNo+1]}
+					li: pre #{snippet.lines[snippet.lineNo]}
 	h2="Stacktrace:"
 	pre #{error.stack}

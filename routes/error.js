@@ -15,14 +15,14 @@ module.exports = function(err, req, res, next) {
 				functionName: match[1],
 				filePath: file.path,
 				fileName: file.name,
-				lineNo: match[3] - 1,
+				lineNo: +match[3],
 				isLib: false,
 				lines: []
 			};
 			if (file.existsSync()) {
 				snippet.isLib = isExternalCode(file);
 				snippet.lines = file.readLinesSync();
-				var errLine = snippet.lines[snippet.lineNo];
+				var errLine = snippet.lines[snippet.lineNo - 1];
 				var colNo = match[4] - 1;
 				snippet.beforeErr = errLine.substring(0, colNo);
 				snippet.afterErr = errLine.substring(colNo);
