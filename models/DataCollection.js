@@ -111,6 +111,15 @@ function DataCollection(schemaName, tableName) {
 		});
 	};
 	
+	/**
+	 * Returns a new instantiated Entity of this DataCollection type.
+	 * 
+	 * @returns {DataCollection.Entity}
+	 */
+	this.new = function(data) {
+		return new Entity(data);
+	};
+	
 	
 	this.Entity = Entity.prototype;
 
@@ -121,6 +130,7 @@ function DataCollection(schemaName, tableName) {
 	 * @param {Object} rowData		a list of key-value pairs retrieved from the database 
 	 */
 	function Entity(rowData) {
+		var self = this;
 
 		// Fix BUFFER issue with bit fields.
 		Object.keys(rowData).forEach(function(field) {
