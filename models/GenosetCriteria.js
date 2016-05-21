@@ -3,17 +3,16 @@ var DataCollection	= require('./DataCollection');
 var Asset			= require('../lib/Assert');
 var Logger			= require('../lib/Logger');
 var db				= require('../lib/db');
+var GenotypeCategory = require('./GenotypeCategory');
 
 
 var GenosetCriteriaParser = require('./GenosetCriteriaParser');
 
-var GenosetCriteria = new DataCollection('genoset'); 
+var GenosetCriteria = new DataCollection('dinodna_data', 'genoset'); 
 
-GenosetCriteria.getAll = function() {
-	const SQL = "SELECT * FROM genoset UNION " +
-			"SELECT -1, CONCAT(rsid, '(', allele1, ';', allele2, ')'), CONCAT(rsid, '(', allele1, ';', allele2, ')'), magnitude, NULL, message, created_at, updated_at " +
-			"FROM snp_allele";
-	return db.executeSql(SQL).then(this._asEntity);
+GenosetCriteria.getSignifigant = function() {
+	//return this.getMany('magnitude <> 0');
+	return this.getMany('coefficient IS NULL OR coefficient <> 1');
 };
 
 
@@ -29,6 +28,18 @@ GenosetCriteria.Entity.test = function(dnaProfileId) {
 		//cachedTests[this._id][dnaProfileId] = result;
 	//}
 	//return cachedTests[this._id][dnaProfileId];
+};
+
+GenosetCriteria.Entity.getCategory = function() {
+	return GenotypeCategory.getById(this.category_id);
+};
+
+GenosetCriteria.Entity.populateCategory = function() {
+	var self = this;
+	return this.getCategory().then(function(category) {
+		self.category = category;
+		return self;
+	});
 };
 
 module.exports = GenosetCriteria;

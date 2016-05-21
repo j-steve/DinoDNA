@@ -3,7 +3,7 @@ extends layout
 append style
 	style.
 		details {
-			background:rgb(255, 231, 231);
+			background:rgb(241, 234, 225);
 			margin-bottom:5px;
 			width:50%;
 			border:1px solid silver;
@@ -22,6 +22,12 @@ append style
 			background:white;
 			margin:5px 15px;
 		}
+		ol.code pre {
+			margin:0px;
+		}
+		.errorLine {
+			background:rgb(255, 162, 162);
+		}
 
 append content
 	h1
@@ -29,13 +35,16 @@ append content
 		span(style="margin-left:10px; font-size:90%;")=message
 	each snippet in codeSnippets 
 		details(style="margin-left:15px;", open=!snippet.isLib)
-			summary #{snippet.fileName}: ##{snippet.lineNo}
+			summary #{snippet.fileName}
 			if snippet.functionName
 				pre.functionName
 					|#{snippet.functionName}() 
-			pre.code
-				|#{snippet.lineNo-1 + snippet.lines[snippet.lineNo-1] + '\n'}
-				span(style="background:rgb(255, 255, 180);") #{snippet.lineNo + snippet.lines[snippet.lineNo] + '\n'}
-				|#{snippet.lineNo+1 + snippet.lines[snippet.lineNo+1] + '\n'}
+			if snippet.lines
+				ol.code(start=snippet.lineNo-1)
+					li: pre #{snippet.lines[snippet.lineNo-1]}
+					li: pre #{snippet.beforeErr}
+						span.errorLine
+							|#{snippet.afterErr}
+					li: pre #{snippet.lines[snippet.lineNo+1]}
 	h2="Stacktrace:"
 	pre #{error.stack}

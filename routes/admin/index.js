@@ -49,13 +49,13 @@ router.post('/load-genosets', function(req, res, next) {
 
 router.all('/populate-genosets', function(req, res, next) {
 	var url = 'http://bots.snpedia.com/api.php?format=json&action=parse&prop=text&page=';
-	db.executeSql('SELECT * FROM genoset WHERE criteria IS NULL').then(function(gsRows) {
+	db.executeSql('SELECT * FROM dinodna_data.genoset WHERE criteria IS NULL').then(function(gsRows) {
 		gsRows.forEach(function(gs) {
 			web.getJsonResponse(url + gs.name + '/criteria').then(function(urlResp) {
 				if (!urlResp.parse.text) {return;}
 				console.log(urlResp);
 				var criteria = text.parseOne(urlResp.parse.text['*'], '<pre>', '</pre>');
-				db.executeSql('UPDATE genoset SET ? WHERE ?', {criteria: criteria}, {id: gs.id});
+				db.executeSql('UPDATE dinodna_data.genoset SET ? WHERE ?', {criteria: criteria}, {id: gs.id});
 			});
 		});
 	});
@@ -65,13 +65,13 @@ router.all('/populate-genosets', function(req, res, next) {
 router.all('/extract-snps', function(req, res, next) {
 	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
 	var startTime = Date.now();
-	var sql = 'SELECT * FROM snp WHERE snpedia = 1 LIMIT ' + (req.query.limit || '50');
+	var sql = 'SELECT * FROM dinodna_data.snp WHERE snpedia = 1 LIMIT ' + (req.query.limit || '50');
 	Promise.each(db.executeSql(sql), function(snp) {
 		return web.getJsonResponse(SNP_EXTRACT_URL + snp.rsid).then(function(urlResp) {
 			if (!urlResp.parse || !urlResp.parse.text) {return console.error('Bad response for', snp.rsid, urlResp);}
 			var cats = urlResp.parse.categories.map(x => x['*']).join('\n');
 			var data = {snpedia: 3, snpedia_page: urlResp.parse.text['*'], snpedia_cats: cats};
-			return db.executeSql('UPDATE snp SET ? WHERE rsid = ?', data, snp.rsid);
+			return db.executeSql('UPDATE dinodna_data.snp SET ? WHERE rsid = ?', data, snp.rsid);
 		}).catch(console.error);
 	}).then(function(inserts) {
 		var txt = 'ok! inserted: '+ inserts.length + ' record';
@@ -88,7 +88,7 @@ router.all('/extract-snps', function(req, res, next) {
 router.all('/populate-snps', function(req, res, next) {
 	//var sql = 'SELECT * FROM snp LEFT OUTER JOIN snp_allele ON snp.rsid = snp_allele.snp_rsid WHERE snp_allele.snp_rsid IS NULL LIMIT 1';
 	var startTime = Date.now();
-	var sql = 'SELECT * FROM snp WHERE snpedia = 1 ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
+	var sql = 'SELECT * FROM dinodna_data.snp WHERE snpedia = 1 ORDER BY RAND() LIMIT ' + (req.query.limit || '50');
 	db.executeSql(sql).then(function(snpRows) {
 		return Promise.each(snpRows, function(snp) {
 			return web.getJsonResponse(SNP_URL + snp.rsid).then(function(urlResp) {
@@ -102,9 +102,9 @@ router.all('/populate-snps', function(req, res, next) {
 						name = name.slice(snpPrefix.length, -1);
 						var alleles = name.split(';').map(x => x.trim());
 						var alleleData = {snp_rsid: snp.rsid, allele1: alleles[0], allele2: alleles[1]};
-						return db.executeSql('INSERT INTO snp_allele SET ?', alleleData).catch({code:'ER_DUP_ENTRY'}, err =>console.warn(err.message));
+						return db.executeSql('INSERT INTO dinodna_data.snp_allele SET ?', alleleData).catch({code:'ER_DUP_ENTRY'}, err =>console.warn(err.message));
 					}
-				}).then(x => db.executeSql('UPDATE snp SET snpedia = 2 WHERE rsid = ?', snp.rsid));
+				}).then(x => db.executeSql('UPDATE dinodna_data.snp SET snpedia = 2 WHERE rsid = ?', snp.rsid));
 			});
 		});
 	}).then(function(inserts) {
@@ -193,8 +193,8 @@ router.all('/migrate-snpedia', function(req, res, next) {
 
 
 router.get('/view-snps', function(req, res, next) {
-	var sql = "SELECT * FROM snpedia_snp WHERE full_text like '%/index.php/Rs%' LIMIT " + (req.query.limit || '10');
-	//var sql = db.format('SELECT * FROM snpedia_snp WHERE ???', [{rsid:req.query.rsid}]);
+	//var sql = "SELECT * FROM dinodna_data.snpedia_snp WHERE full_text like '%/index.php/Rs%' LIMIT " + (req.query.limit || '10');
+	var sql = db.format('SELECT * FROM dinodna_data.snpedia_snp WHERE ???', [{rsid:req.query.rsid}]);
 	//var sql = 'SELECT * FROM snpedia_snp WHERE categories LIKE \'%Has_genotype%\' LIMIT ' + (req.query.limit || '10')  + ' OFFSET ' + Math.floor(Math.random() * 10000);
 	//var sql = 'SELECT * FROM snpedia_snp LIMIT ' + (req.query.limit || '10')  + ' OFFSET ' + Math.floor(Math.random() * 10000);
 	db.executeSql(sql).then(function(snpRows) {
@@ -210,7 +210,7 @@ var ORIENTATION_REGEX = />Orientation<\/a><\/td><td>([^<]+)<\/td>/;
 
 router.get('/parse-snps', function(req, res, next) {
 	var startTime = Date.now();
-	var sql = 'SELECT * FROM snpedia_snp left join snp using (rsid) where snp.rsid is null LIMIT ' + (req.query.limit || '100');
+	var sql = 'SELECT * FROM dinodna_data.snpedia_snp left join snp using (rsid) where snp.rsid is null LIMIT ' + (req.query.limit || '100');
 	return Promise.each(db.executeSql(sql), function(snpRow) {
 		var genomeMatches = GENOME_REGEX.exec(snpRow.full_text);
 		var chromosomeMatches = CHROMOSOME_REGEX.exec(snpRow.full_text);
@@ -223,7 +223,7 @@ router.get('/parse-snps', function(req, res, next) {
 				position: positionMatches && positionMatches[1],
 				is_reversed : orientationMatches && toBoolean(orientationMatches[1], 'minus', 'plus')
 		};
-		return db.executeSql('INSERT INTO `snp` SET ?', snp).catch(err => console.error(err));
+		return db.executeSql('INSERT INTO dinodna_data.`snp` SET ?', snp).catch(err => console.error(err));
 	}).then(function(inserts) {
 		var txt = 'ok! inserted: '+ inserts.length;
 		var elapsedTime = Date.now() - startTime;
@@ -269,13 +269,13 @@ router.get('/parse-snps2', function(req, res, next) {
 				nomatches += '<hr>' + snpRow.full_text;
 			} else {
 				inserts.push(snp_allele.rsid + '(' + snp_allele.allele1 + ';' + snp_allele.allele2 + ') - ' + snp_allele.message);
-				var promise = db.executeSql('INSERT INTO `snp_allele` SET ?', snp_allele);
+				var promise = db.executeSql('INSERT INTO dinodna_data.`snp_allele` SET ?', snp_allele);
 				promises.push(promise);
 			}
 		}
 		if (!promises.length) {Logger.info('No regex matches for {0}', snpRow.rsid); nomatches += '<hr>' + snpRow.full_text;}
 		return Promise.all(promises).then(function() {
-			return db.executeSql("UPDATE `snpedia_snp` SET  status_code = '5' where rsid = ?", snpRow.rsid);
+			return db.executeSql("UPDATE dinodna_data.`snpedia_snp` SET  status_code = '5' where rsid = ?", snpRow.rsid);
 		});
 		
 	}).then(function() {

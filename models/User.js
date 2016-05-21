@@ -4,7 +4,7 @@ var db		= require('../lib/db');
 var DnaProfile = require('./DnaProfile');
 var DataCollection	= require('./DataCollection');
 
-var User = new DataCollection('user');
+var User = new DataCollection('dinodna_web', 'user');
 
 /**
  * Sets the password by hashing the given password value.

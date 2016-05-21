@@ -5,12 +5,16 @@ append content
 	table
 		tr
 			th="Name"
-			th(title="Magnitude")="Mag."
+			th(title="Signifigance")="Sig."
 			th="Repute"
+			th(title="Magnitude")="Mag."
+			th="Category"
 			th="Summary"
 		for gs in genosets
 			tr
 				td #{gs.name}
 				td #{gs.magnitude}
 				td #{gs.repute}
+				td(style="text-align:right;") #{gs.coefficient && gs.coefficient + 'x'}
+				td #{gs.category && gs.category.name}
 				td #{gs.summary}

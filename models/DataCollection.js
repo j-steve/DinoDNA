@@ -1,5 +1,6 @@
 var Promise	= require('bluebird');
 var db		= require('../lib/db');
+var text	= require('../lib/text');
 
 /**
  * The DataCollection is a wrapper class for interfacing with a single DB table.
@@ -9,7 +10,7 @@ var db		= require('../lib/db');
  * @class
  * @param {String} tableName	the name of the database table asociated with this class
  */
-function DataCollection(tableName) {
+function DataCollection(schemaName, tableName) {
 	var self = this;
 
 	/**
@@ -17,7 +18,7 @@ function DataCollection(tableName) {
 	 * without requiring those column names to be specified in the code.
 	 * @type {Promise<Array<mysql.Field>>
 	 */
-	var getMetadata = db.executeSql('SHOW COLUMNS FROM ??', tableName);
+	var getMetadata = db.executeSql('SHOW COLUMNS FROM ??.??', schemaName, tableName);
 	
 	/**
 	 * A metadata query indicating the name of the table's primary key field.
@@ -39,6 +40,7 @@ function DataCollection(tableName) {
 	 * @returns {Promise<Entity>}
 	 */
 	this.getById = function(id) {
+		if (id == null) {return Promise.resolve(null);}
 		return getIdField.then(idField => self.getOne(idField, id));
 	};
 
@@ -54,7 +56,7 @@ function DataCollection(tableName) {
 	this.getOne = function(where, whereVal) {
 		if (typeof where === 'string' && whereVal) {where = {[where]: whereVal};}
 		return self.getMany(where).then(function(results) {
-			if (results.length > 1) {throw new Error('More than 1 record returned.');}
+			if (results.length > 1) {throw new Error(text.format('More than 1 record returned for {0} where {1} {2}.', tableName, where, whereVal));}
 			return results.length === 0 ? null : results[0];
 		});
 	};
@@ -66,8 +68,8 @@ function DataCollection(tableName) {
 	 * @returns {Promise<Array<Entity>>}
 	 */
 	this.getMany = function(where) {
-		const SQL = 'SELECT * FROM ?? WHERE ???';
-		return db.executeSql(SQL, tableName, where).then(self._asEntity);
+		const SQL = 'SELECT * FROM ??.?? WHERE ???';
+		return db.executeSql(SQL, schemaName, tableName, where).then(self._asEntity);
 	};
 
 	/**
@@ -76,8 +78,8 @@ function DataCollection(tableName) {
 	 * @returns {Promise<Array<Entity>>}
 	 */
 	this.getAll = function() {
-		const SQL = 'SELECT * FROM ??';
-		return db.executeSql(SQL, tableName).then(self._asEntity);
+		const SQL = 'SELECT * FROM ??.??';
+		return db.executeSql(SQL, schemaName, tableName).then(self._asEntity);
 	};
 	
 	/**
@@ -88,8 +90,8 @@ function DataCollection(tableName) {
 	 */
 	this.count = function(where) {
 		const COUNT = 'COUNT(*)';
-		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ?? WHERE ???';
-		return db.executeSql(SQL, COUNT, tableName, where).then(self._asEntity);
+		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ??.?? WHERE ???';
+		return db.executeSql(SQL, COUNT, schemaName, tableName, where).then(self._asEntity);
 	};
 	
 	/**
@@ -100,7 +102,7 @@ function DataCollection(tableName) {
 	this.insert = function(values) {
 		if (!values || !values.length) {return Promise.resolve(null);}
 		var columns = Object.keys(values[0]);
-		return db.executeSql('INSERT INTO ?? (??) VALUES ?', tableName, columns, values);
+		return db.executeSql('INSERT INTO ??.?? (??) VALUES ?', schemaName, tableName, columns, values);
 	};
 	
 	this._asEntity = function(dbRows) {
@@ -148,8 +150,8 @@ function DataCollection(tableName) {
 		 */
 		this.insert = function() {
 			if (self._id) {return Promise.reject('Cannot insert: ID already exists, value="' + self._id + '".');}
-			const SQL = 'INSERT INTO ?? SET ?';
-			return db.executeSql(SQL, tableName, self._rowData).then(function(result) {
+			const SQL = 'INSERT INTO ??.?? SET ?';
+			return db.executeSql(SQL, schemaName, tableName, self._rowData).then(function(result) {
 				self._id = result.insertId;
 				return self;
 			});
@@ -164,8 +166,8 @@ function DataCollection(tableName) {
 		 */
 		this.update = function() {
 			if (!self._id) {return Promise.reject('Cannot update: ID is null.');}
-			const SQL = 'UPDATE ?? SET ? WHERE ???';
-			return db.executeSql(SQL, tableName, self._rowData, {id: self._id}).then(function(result) {
+			const SQL = 'UPDATE ??.?? SET ? WHERE ???';
+			return db.executeSql(SQL, schemaName, tableName, self._rowData, {id: self._id}).then(function(result) {
 				return self;
 			});
 		};

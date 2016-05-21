@@ -1,5 +1,6 @@
-/.project
-/node_modules/**
-/nbproject/**
-/public/stylesheets/**.css
-/.settings
+.project
+.settings/
+nbproject/
+node_modules/
+public/stylesheets/**.css
+log/
