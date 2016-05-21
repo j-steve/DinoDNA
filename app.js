@@ -60,37 +60,13 @@ app.use('/dna-profile', require('./routes/dna-profile'));
 app.use('/report/compare', require('./routes/report/compare'));
 app.use('/report/genosets', require('./routes/report/genoset'));
 
-// Catch 404 and forward to error handler.
+// Catch 404 and forward to main error handler.
 app.use(function(req, res, next) {
-	var err = new Error('Not Found');
-	err.status = 404;
-	next(err);
+  res.status = 404;
+  res.render('404');
 });
 
-// Handle Errors.
-const errLine = /at (?:([^(\/\\]+) \()?(.+):(\d+):(\d+)(?:\))?/g;
-app.use(function(err, req, res, next) {
-	var match;
-	var codeSnippets = [];
-	while ((match = errLine.exec(err.stack))) {
-		var file = new File(match[2]);
-		var snippet = {
-			functionName: match[1],
-			filePath: file.path,
-			fileName: file.name,
-			lineNo: match[3] - 1,
-			isLib: file.path.contains('node_modules'),
-			lines: file.existsSync() ? file.readLinesSync() : []
-		};
-		codeSnippets.push(snippet);
-	}	
-	Logger.error('ERROR: {0}', err);
-	res.status(err.status || 500);
-	res.render('error', {
-		message : err.message || err,
-		error : app.get('env') === 'development' ? err : null,
-		codeSnippets: codeSnippets
-	});
-});
+// error handlers
+app.use(require('./routes/error'));
 
 module.exports = app;
