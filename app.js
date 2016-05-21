@@ -1,15 +1,14 @@
 require('./lib/polyfill.js');
-var express 	= require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var busboy = require('connect-busboy');
-var lessMiddleware = require('less-middleware');
-var fs 			= require('fs');
-var Logger 		= require('./lib/Logger');
-var File 		= require('./lib/File');
+var express			= require('express');
+var path			= require('path');
+var favicon			= require('serve-favicon');
+var logger			= require('morgan');
+var cookieParser	= require('cookie-parser');
+var bodyParser		= require('body-parser');
+var busboy			= require('connect-busboy');
+var lessMiddleware	= require('less-middleware');
+var Logger			= require('./lib/Logger');
+var File			= require('si-file');
 
 var app = express();
 
