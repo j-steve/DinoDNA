@@ -19,6 +19,6 @@
 	"bcrypt-nodejs" : "latest",
 	"request": "2.72.x",
 	"mysql": "2.10.x",
-	"si-file": "1.0.x"
+	"si-file": "1.1.x"
   }
 }
