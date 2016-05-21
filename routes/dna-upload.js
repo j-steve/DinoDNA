@@ -50,7 +50,7 @@ router.post('/', function(req, res, next) {
 			}
 		});
 
-		var dnaFileParser = new DnaFileParser(res.locals.dnaProfile.id);
+		var dnaFileParser = new DnaFileParser(res.locals.dnaProfile);
 		
 		lineReader.on('line', line => snps.push(dnaFileParser.parseLine(line)));
 
