@@ -6,9 +6,9 @@ var DnaProfileSnp	= require('./DnaProfileSnp');
 
 var snpCriteria = function(searchAlleles, rsid, dnaProfileId) {
 	searchAlleles = searchAlleles.map(x => x === '-' ? '0' : x); // replace "-" with "0".
-	if (!searchAlleles.every(x => ['A', 'T', 'C', 'G', '0'].indexOf(x) !== -1)) {
+	/*if (!searchAlleles.every(x => ['A', 'T', 'C', 'G', '0'].indexOf(x) !== -1)) {
 		Logger.warn('SNP genoset criteria for {0} contains invalid alleles: {1}', rsid, searchAlleles);
-	}
+	}*/
 	var containsUnknowns = false;
 	return DnaProfileSnp.getByNk(dnaProfileId, rsid).then(function(dnaProfSnp) {
 		if (dnaProfSnp === null) {return null;}

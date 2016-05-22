@@ -23,7 +23,7 @@ function DnaFileParser() {
 		} else if (self.isValidFile) {
 			var columns = line.split('\t');
 			if (combinedAlleles) { // Convert "AG" to "A" and "G".
-				var alleles = columns.splice(-1, 1);
+				var alleles = columns.splice(-1, 1)[0];
 				columns.push(alleles[0]);
 				columns.push(alleles[1]);
 			}
