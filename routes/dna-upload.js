@@ -10,6 +10,9 @@ var UploadedFile	= require('../models/UploadedFile');
 
 var COLUMN_NAMES = ['rsid', 'chromosome', 'position', 'allele1', 'allele2', 'dna_profile_id', 'uploaded_file_id'];
 
+var FLIP_ALLELES_SQL = "UPDATE dinodna_web.dna_profile_snp JOIN dinodna_data.snp USING (rsid) SET allele1 = CASE allele1 WHEN 'A' THEN 'T' WHEN 'T' THEN 'A' WHEN 'C' THEN 'G' WHEN 'G' THEN 'C' END, allele2 = CASE allele2 WHEN 'A' THEN 'T' WHEN 'T' THEN 'A' WHEN 'C' THEN 'G' WHEN 'G' THEN 'C' END WHERE is_reversed = 1 AND uploaded_file_id = ?";
+
+
 /* File Upload GET */
 router.get('/', function(req, res, next) {
 	DnaProfile.getById(req.query.profile).then(function(dnaProfile) {
@@ -74,15 +77,18 @@ router.post('/', function(req, res, next) {
 			}
 
 			Promise.all(inserts).then(function() {
-				console.log('All uploads complete.');
+				console.log('All uploads complete.'); 
 				if (dnaFileParser.isAlwaysFwdStrand) {
-					// TODO: swap the strands to correct orientation.
-				} else {
-					uploadedFile.completed_at = new Date();
-					uploadedFile.save();	
+					console.log('Flippin alleles');
+					return db.executeSql(FLIP_ALLELES_SQL, uploadedFile.id);
 				}
+			}).then(function() {
+				console.log('All done!');
+				uploadedFile.completed_at = new Date();
+				uploadedFile.save();
 			}).catch(function(err) {
-				uploadedFile.delete(); // FK cascading delete will delete all SNPs from this file.
+				 // On error, delete UploadedFile. Cascading delete will delete all SNPs.
+				uploadedFile.delete();
 				Logger.error(err);
 			});
 		});

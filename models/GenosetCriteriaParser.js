@@ -12,18 +12,15 @@ var snpCriteria = function(searchAlleles, rsid, dnaProfileId) {
 	var containsUnknowns = false;
 	return DnaProfileSnp.getByNk(dnaProfileId, rsid).then(function(dnaProfSnp) {
 		if (dnaProfSnp === null) {return null;}
-		return dnaProfSnp.getAlleles().each(function(allele) {
+		[dnaProfSnp.allele1, dnaProfSnp.allele2].forEach(function(allele) {
 			var index = searchAlleles.indexOf(allele);
 			if (index !== -1) {
 				searchAlleles.splice(index, 1);
 			} else if (allele === '0') {
 				containsUnknowns = null; // return NULL vs FALSE to indicate that the value is unknown, not explicitly untrue.
 			}
-		}).then(function() {
-			//Logger.log('Parsing SNP genoset criteria {0} for alleles {1} within dna profile id {2}:', rsid, searchAlleles, dnaProfileId);
-			//Logger.log('\tRemainig alleles are {0} so returning {1}.', searchAlleles, !searchAlleles.length || containsUnknowns);
-			return !searchAlleles.length || containsUnknowns;
 		});
+		return !searchAlleles.length || containsUnknowns;
 	});
 };
 

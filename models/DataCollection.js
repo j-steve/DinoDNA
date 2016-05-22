@@ -12,6 +12,8 @@ var text	= require('../lib/text');
  */
 function DataCollection(schemaName, tableName) {
 	var self = this;
+	
+	this.fullTableName = db.format('??.??', schemaName, tableName);
 
 	/**
 	 * The main table metadata query, used to populate the list of columns from the specified table
