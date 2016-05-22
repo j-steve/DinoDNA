@@ -1,9 +1,8 @@
 /** 
  * @class
- * @param {DnaProfile} dnaProfile
  * @returns {DnaFileParser}
  */
-function DnaFileParser(dnaProfile) {
+function DnaFileParser() {
 	var self = this;
 	
 	this.isValidFile = true;
@@ -28,7 +27,7 @@ function DnaFileParser(dnaProfile) {
 				columns.push(alleles[0]);
 				columns.push(alleles[1]);
 			}
-			return columns.concat(dnaProfile.id);
+			return columns;
 		}
 	};
 	

@@ -6,8 +6,9 @@ var Logger			= require('../lib/Logger');
 var DnaProfile		= require('../models/DnaProfile');
 var DnaProfileSnp	= require('../models/DnaProfileSnp');
 var DnaFileParser	= require('../models/DnaFileParser');
+var UploadedFile	= require('../models/UploadedFile');
 
-var COLUMN_NAMES = ['rsid', 'chromosome', 'position', 'allele1', 'allele2', 'dna_profile_id'];
+var COLUMN_NAMES = ['rsid', 'chromosome', 'position', 'allele1', 'allele2', 'dna_profile_id', 'uploaded_file_id'];
 
 /* File Upload GET */
 router.get('/', function(req, res, next) {
@@ -20,19 +21,22 @@ router.get('/', function(req, res, next) {
 router.post('/', function(req, res, next) {
 	try {
 		req.pipe(req.busboy);
-		req.busboy.on('file', processFile);
+		req.busboy.on('file', function(fieldname, fileStream, filename) {
+			UploadedFile.new({name: filename}).insert().then(function(uploadedFile) {
+				processFile(uploadedFile, fileStream);
+			});
+		});
 	} catch (e) {
 		Logger.error(e);
 		res.status(500).end("An error occured.");
 	}
 
 	/**
-	 * @param {String} fieldname
+	 * @param {UploadedFile} uploadedFile
 	 * @param {FileStream} file
-	 * @param {String} filename
 	 */
-	function processFile(fieldname, file, filename) {
-		console.log("Uploading: " + filename);
+	function processFile(uploadedFile, file) {
+		console.log("Uploading: " + uploadedFile.name);
 
 		var lineReader = Readline.createInterface({input: file});
 		var snps = [];
@@ -49,22 +53,34 @@ router.post('/', function(req, res, next) {
 				snps = [];
 			}
 		});
-
-		var dnaFileParser = new DnaFileParser(res.locals.dnaProfile);
+		
+		var dnaFileParser = new DnaFileParser();
 		
 		lineReader.on('line', function(line) {
 			var snp = dnaFileParser.parseLine(line);
-			if (snp) {snps.push(snp);}
+			if (snp) {
+				snp.push(res.locals.dnaProfile.id);
+				snp.push(uploadedFile.id);
+				snps.push(snp);
+			}
 		});
 
 		lineReader.on('close', function() {
 			if (dnaFileParser.isValidFile) {
 				res.sendStatus(200);
 			} else {
+				uploadedFile.delete();
 				res.status(500).end('Invalid file: must be AncestryDNA or 23andMe file export.');
 			}
 
-			Promise.all(inserts).then(x => console.log('All uploads complete.')).catch(Logger.error);
+			Promise.all(inserts).then(function() {
+				console.log('All uploads complete.');
+				uploadedFile.completed_at = new Date();
+				uploadedFile.save();
+			}).catch(function(err) {
+				uploadedFile.delete(); // FK cascading delete will delete all SNPs from this file.
+				Logger.error(err);
+			});
 		});
 	}
 });
