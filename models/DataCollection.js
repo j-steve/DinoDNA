@@ -56,7 +56,12 @@ function DataCollection(schemaName, tableName) {
 	 * @returns {Promise<Entity>}
 	 */
 	this.getOne = function(where, whereVal) {
-		if (typeof where === 'string' && whereVal) {where = {[where]: whereVal};}
+		if (typeof where === 'string' && whereVal) {
+			//where = {[where]: whereVal};
+			whereObj = {};
+			whereObj[where] = whereVal;
+			where = whereObj;
+		}
 		return self.getMany(where).then(function(results) {
 			if (results.length > 1) {throw new Error(text.format('More than 1 record returned for {0} where {1} {2}.', tableName, where, whereVal));}
 			return results.length === 0 ? null : results[0];
@@ -70,7 +75,7 @@ function DataCollection(schemaName, tableName) {
 	 * @returns {Promise<Array<Entity>>}
 	 */
 	this.getMany = function(where) {
-		const SQL = 'SELECT * FROM ??.??' + db.where(where);
+		var SQL = 'SELECT * FROM ??.??' + db.where(where);
 		return db.executeSql(SQL, schemaName, tableName).then(self._asEntity);
 	};
 
@@ -80,7 +85,7 @@ function DataCollection(schemaName, tableName) {
 	 * @returns {Promise<Array<Entity>>}
 	 */
 	this.getAll = function() {
-		const SQL = 'SELECT * FROM ??.??';
+		var SQL = 'SELECT * FROM ??.??';
 		return db.executeSql(SQL, schemaName, tableName).then(self._asEntity);
 	};
 	
@@ -91,8 +96,8 @@ function DataCollection(schemaName, tableName) {
 	 * @returns {Promise<Number>}
 	 */
 	this.count = function(where) {
-		const COUNT = 'COUNT(*)';
-		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ??.??' + db.where(where);
+		var COUNT = 'COUNT(*)';
+		var SQL = 'SELECT ' + COUNT + ' as ?? FROM ??.??' + db.where(where);
 		return db.executeSql(SQL, COUNT, schemaName, tableName).then(self._asEntity);
 	};
 	
@@ -162,7 +167,7 @@ function DataCollection(schemaName, tableName) {
 		 */
 		this.insert = function() {
 			if (self._id) {return Promise.reject('Cannot insert: ID already exists, value="' + self._id + '".');}
-			const SQL = 'INSERT INTO ??.?? SET ?';
+			var SQL = 'INSERT INTO ??.?? SET ?';
 			return db.executeSql(SQL, schemaName, tableName, self._rowData).then(function(result) {
 				self._id = result.insertId;
 				return self;
@@ -178,10 +183,15 @@ function DataCollection(schemaName, tableName) {
 		 */
 		this.update = function() {
 			if (!self._id) {return Promise.reject('Cannot update: ID is null.');}
-			const SQL = 'UPDATE ??.?? SET ?' + db.where({id: self._id});
+			var SQL = 'UPDATE ??.?? SET ?' + db.where({id: self._id});
 			return db.executeSql(SQL, schemaName, tableName, self._rowData).then(function(result) {
 				return self;
 			});
+		};
+		
+		this.delete = function() {
+			var sql = 'DELETE FROM ??.??' + db.where({id: self._id});
+			return db.executeSql(sql, schemaName, tableName);
 		};
 	}
 	

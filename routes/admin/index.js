@@ -244,7 +244,7 @@ function toBoolean(value, positive, negative, allowNonMatch) {
 }
 
 
-const SNP_ALLELE_PATT = 'href="\\/index\\.php\\/((?:Rs|I)\\w+)\\((\\w+);(\\w+)\\)"[^>]*?>\\(\\2;\\3\\)[\\s\\S]+?<td[^>]*>\\s*([0-9.]+)?\\s*<\\/td>\\s*<td>\\s*([^<]+?)?\\s*<\\/td>';
+var SNP_ALLELE_PATT = 'href="\\/index\\.php\\/((?:Rs|I)\\w+)\\((\\w+);(\\w+)\\)"[^>]*?>\\(\\2;\\3\\)[\\s\\S]+?<td[^>]*>\\s*([0-9.]+)?\\s*<\\/td>\\s*<td>\\s*([^<]+?)?\\s*<\\/td>';
 
 router.get('/parse-snps2', function(req, res, next) {	
 	var startTime = Date.now();

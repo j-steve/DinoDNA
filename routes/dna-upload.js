@@ -88,8 +88,8 @@ router.post('/', function(req, res, next) {
 				uploadedFile.save();
 			}).catch(function(err) {
 				 // On error, delete UploadedFile. Cascading delete will delete all SNPs.
+				console.error(err);
 				uploadedFile.delete();
-				Logger.error(err);
 			});
 		});
 	}
