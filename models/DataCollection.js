@@ -68,8 +68,8 @@ function DataCollection(schemaName, tableName) {
 	 * @returns {Promise<Array<Entity>>}
 	 */
 	this.getMany = function(where) {
-		const SQL = 'SELECT * FROM ??.?? WHERE ???';
-		return db.executeSql(SQL, schemaName, tableName, where).then(self._asEntity);
+		const SQL = 'SELECT * FROM ??.??' + db.where(where);
+		return db.executeSql(SQL, schemaName, tableName).then(self._asEntity);
 	};
 
 	/**
@@ -90,8 +90,8 @@ function DataCollection(schemaName, tableName) {
 	 */
 	this.count = function(where) {
 		const COUNT = 'COUNT(*)';
-		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ??.?? WHERE ???';
-		return db.executeSql(SQL, COUNT, schemaName, tableName, where).then(self._asEntity);
+		const SQL = 'SELECT ' + COUNT + ' as ?? FROM ??.??' + db.where(where);
+		return db.executeSql(SQL, COUNT, schemaName, tableName).then(self._asEntity);
 	};
 	
 	/**
@@ -176,8 +176,8 @@ function DataCollection(schemaName, tableName) {
 		 */
 		this.update = function() {
 			if (!self._id) {return Promise.reject('Cannot update: ID is null.');}
-			const SQL = 'UPDATE ??.?? SET ? WHERE ???';
-			return db.executeSql(SQL, schemaName, tableName, self._rowData, {id: self._id}).then(function(result) {
+			const SQL = 'UPDATE ??.?? SET ?' + db.where({id: self._id});
+			return db.executeSql(SQL, schemaName, tableName, self._rowData).then(function(result) {
 				return self;
 			});
 		};

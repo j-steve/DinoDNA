@@ -6,12 +6,13 @@
 function DnaFileParser(dnaProfile) {
 	var self = this;
 	
+	this.isValidFile = true;
+	
 	var awaitingHeader = false;
 	var combinedAlleles = false;
 	var isAlwaysFwdStrand = false;
 	
-	this.isValidFile = true;
-	
+	var isFirstLine = true;
 	this.parseLine = function(line) {
 		if (isFirstLine) {
 			parseFormatType(line);
@@ -34,6 +35,7 @@ function DnaFileParser(dnaProfile) {
 	function parseFormatType(firstLine) {
 		if (firstLine.contains('AncestryDNA')) {
 			awaitingHeader = true;
+			isAlwaysFwdStrand = true;
 		} else if (firstLine.contains('23andMe')) { 
 			combinedAlleles = true;
 		} else {

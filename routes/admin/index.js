@@ -194,7 +194,7 @@ router.all('/migrate-snpedia', function(req, res, next) {
 
 router.get('/view-snps', function(req, res, next) {
 	//var sql = "SELECT * FROM dinodna_data.snpedia_snp WHERE full_text like '%/index.php/Rs%' LIMIT " + (req.query.limit || '10');
-	var sql = db.format('SELECT * FROM dinodna_data.snpedia_snp WHERE ???', [{rsid:req.query.rsid}]);
+	var sql = 'SELECT * FROM dinodna_data.snpedia_snp' + db.where({rsid:req.query.rsid});
 	//var sql = 'SELECT * FROM snpedia_snp WHERE categories LIKE \'%Has_genotype%\' LIMIT ' + (req.query.limit || '10')  + ' OFFSET ' + Math.floor(Math.random() * 10000);
 	//var sql = 'SELECT * FROM snpedia_snp LIMIT ' + (req.query.limit || '10')  + ' OFFSET ' + Math.floor(Math.random() * 10000);
 	db.executeSql(sql).then(function(snpRows) {

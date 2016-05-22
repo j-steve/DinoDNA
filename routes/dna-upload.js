@@ -52,7 +52,10 @@ router.post('/', function(req, res, next) {
 
 		var dnaFileParser = new DnaFileParser(res.locals.dnaProfile);
 		
-		lineReader.on('line', line => snps.push(dnaFileParser.parseLine(line)));
+		lineReader.on('line', function(line) {
+			var snp = dnaFileParser.parseLine(line);
+			if (snp) {snps.push(snp);}
+		});
 
 		lineReader.on('close', function() {
 			if (dnaFileParser.isValidFile) {
