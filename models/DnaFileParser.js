@@ -9,7 +9,7 @@ function DnaFileParser() {
 	
 	var awaitingHeader = false;
 	var combinedAlleles = false;
-	var isAlwaysFwdStrand = false;
+	this.isAlwaysFwdStrand = false;
 	
 	var isFirstLine = true;
 	this.parseLine = function(line) {
@@ -34,7 +34,7 @@ function DnaFileParser() {
 	function parseFormatType(firstLine) {
 		if (firstLine.contains('AncestryDNA')) {
 			awaitingHeader = true;
-			isAlwaysFwdStrand = true;
+			self.isAlwaysFwdStrand = true;
 		} else if (firstLine.contains('23andMe')) { 
 			combinedAlleles = true;
 		} else {

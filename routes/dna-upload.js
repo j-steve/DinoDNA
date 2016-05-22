@@ -75,8 +75,12 @@ router.post('/', function(req, res, next) {
 
 			Promise.all(inserts).then(function() {
 				console.log('All uploads complete.');
-				uploadedFile.completed_at = new Date();
-				uploadedFile.save();
+				if (dnaFileParser.isAlwaysFwdStrand) {
+					// TODO: swap the strands to correct orientation.
+				} else {
+					uploadedFile.completed_at = new Date();
+					uploadedFile.save();	
+				}
 			}).catch(function(err) {
 				uploadedFile.delete(); // FK cascading delete will delete all SNPs from this file.
 				Logger.error(err);
